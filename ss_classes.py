@@ -173,7 +173,6 @@ class Grid:
         '''Recomputes normalized values for when something has changed in parent classes.'''
         self.gutter = self._gutter_px
 
-
 @dataclass
 class Screen:
     grid: Grid
@@ -303,7 +302,6 @@ def main():
 
     for screen in screens:
         print(screen.get_values())
-
 
 if __name__ == "__main__":
     main()
