@@ -169,6 +169,15 @@ class Grid:
                 (self.rows-1) * self.gutter[1]) / self.rows
         return height 
 
+    @property
+    def matrix(self) -> list:
+        matrix = []
+        for row in range(self.rows):
+            x = row * self.cols + 1
+            matrix_row = [col + x for col in range(self.cols)]
+            matrix.append(matrix_row)
+        return matrix
+
     def compute(self) -> None: 
         '''Recomputes normalized values for when something has changed in parent classes.'''
         self.gutter = self._gutter_px
@@ -279,29 +288,6 @@ def main():
             coly = 1
         )
     ]
-
-    for screen in screens:
-        print(screen.get_values())
-
-    grid.cols = 15
-
-    for screen in screens:
-        print(screen.get_values())
-
-    grid.gutter = 40
-
-    for screen in screens:
-        print(screen.get_values())
-
-    margin.bottom = 20
-
-    for screen in screens:
-        print(screen.get_values())
-
-    canvas.width = 2000
-
-    for screen in screens:
-        print(screen.get_values())
 
 if __name__ == "__main__":
     main()
