@@ -1,0 +1,7 @@
+		{{ CANVAS_NAME }} = Background {
+			Inputs = {
+				Width = Input { Value = {{ CANVAS_WIDTH }}, },
+				Height = Input { Value = {{ CANVAS_HEIGHT }}, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, {{ Y }} } },
+		},

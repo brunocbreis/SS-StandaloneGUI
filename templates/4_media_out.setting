@@ -1,0 +1,10 @@
+        MediaOut1 = MediaOut {
+            Inputs = {
+                Index = Input { Value = "0", },
+                Input = Input {
+                    SourceOp = "{{ INPUT }}",
+                    Source = "Output",
+                },
+            },
+            ViewInfo = OperatorInfo { Pos = { 0, {{ Y }} } },
+        }
