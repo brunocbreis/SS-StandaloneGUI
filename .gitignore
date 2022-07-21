@@ -1,2 +1,4 @@
 test files/
+reference/
 .DS_Store
+__pycache__/
