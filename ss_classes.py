@@ -26,6 +26,8 @@ class Canvas:
     @height.setter # will call children
     def height(self, height: int):
         self._height_px = height
+        for child in self._children:
+            child()
 
     def give_birth(self, child):
         self._children.append(child)
@@ -39,6 +41,7 @@ class Margin:
 
     def __init__(self, canvas: Canvas) -> None:     
         self.canvas = canvas  
+        self.canvas.give_birth(self.compute)
         self._top_px = 0
         self._left_px = 0
         self._bottom_px = 0
@@ -47,9 +50,6 @@ class Margin:
         self._left = 0.0
         self._bottom = 0.0
         self._right = 0.0
-
-    def __post_init__(self):
-        self.canvas.give_birth(self.needs_update)
 
     @property
     def top(self) -> int:
@@ -103,9 +103,12 @@ class Margin:
         self._right_px = value
         self._right = value / self.canvas.width
 
-    def needs_update(self):
-        print("Needs update.")
-        return True
+    def compute(self):
+        '''Recomputes normalized values for when something has changed in a parent class.'''
+        self.top = self._top_px
+        self.left = self._left_px
+        self.bottom = self._bottom_px
+        self.right = self._right_px
           
 class Grid:
     def __init__(self, canvas: Canvas, margin: Margin) -> None:
@@ -116,10 +119,10 @@ class Grid:
         self._gutter_px = 0
         self._gutter_w = 0.0
         self._gutter_h = 0.0
-        self._has_been_computed = False
+        self.canvas.give_birth(self.compute)
 
     @property
-    def cols(self):
+    def cols(self) -> int:
         '''Number of grid columns.'''
         return self._cols
 
@@ -129,7 +132,7 @@ class Grid:
         # should flag for changes in GRID, SCREEN
 
     @property
-    def rows(self):
+    def rows(self) -> int:
         '''Number of grid rows.'''
         return self._rows
 
@@ -139,7 +142,7 @@ class Grid:
         # should flag for changes in GRID, SCREEN
 
     @property
-    def gutter(self):
+    def gutter(self) -> float:
         '''Returns Gutter values (w,h), normalized.'''
         return (self._gutter_w, self._gutter_h)
 
@@ -151,7 +154,7 @@ class Grid:
         # PROBLEM: should flag for changes in GRID, SCREEN
 
     @property
-    def col_width(self):
+    def col_width(self) -> float:
         '''Returns Column width, normalized.'''
         mg = self.margin
         width = (1 - mg.left - mg.right -
@@ -159,27 +162,16 @@ class Grid:
         return width
 
     @property
-    def row_height(self):
+    def row_height(self) -> float:
         '''Returns Row height, normalized.'''
         mg = self.margin
         height = (1 - mg.top - mg.bottom -
                 (self.rows-1) * self.gutter[1]) / self.rows
         return height 
 
-    # OBSOLETE
-    def compute_values(self):
-        '''Currently returns pixels. Should return normalized.'''
-        canvas = self.canvas
-        margin = self.margin
-        self.col_width = (canvas.width - 
-                             margin.left - 
-                             margin.right -
-                             (self.cols-1) * self.gutter) / self.cols
-        self.row_height = (canvas.height - 
-                             margin.top - 
-                             margin.bottom -
-                             (self.rows-1) * self.gutter) / self.rows
-        self._has_been_computed = True
+    def compute(self) -> None: 
+        '''Recomputes normalized values for when something has changed in parent classes.'''
+        self.gutter = self._gutter_px
 
 
 @dataclass
