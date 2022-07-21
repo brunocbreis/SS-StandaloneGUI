@@ -129,7 +129,6 @@ class Grid:
     @cols.setter
     def cols(self, value: int):
         self._cols = value
-        # should flag for changes in GRID, SCREEN
 
     @property
     def rows(self) -> int:
@@ -139,7 +138,6 @@ class Grid:
     @rows.setter
     def rows(self, value: int):
         self._rows = value
-        # should flag for changes in GRID, SCREEN
 
     @property
     def gutter(self) -> float:
@@ -151,7 +149,6 @@ class Grid:
         self._gutter_px = value
         self._gutter_w = value / self.canvas.width
         self._gutter_h = value / self.canvas.height
-        # PROBLEM: should flag for changes in GRID, SCREEN
 
     @property
     def col_width(self) -> float:
