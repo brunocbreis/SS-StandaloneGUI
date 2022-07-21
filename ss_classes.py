@@ -1,40 +1,66 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 @dataclass
 class Canvas:
     """Defines the canvas size in pixels"""
     width: int = 1920
     height: int = 1080
+    _children: list = field(default_factory=list, repr=False)
 
-    def set_resolution(self, width: int = None, height: int = None):
-        if width is int:
-            self.width = width
-        if height is int:
-            self.height = height
+    @width.setter
+    def width(self, width: int):
+        self.width = width
+
+    @height.setter
+    def height(self, height: int):
+        self.height = height
+
+    @property
+    def width(self):
+        return self.width
+
+    @property
+    def height(self):
+        return self.height
+
+    def give_birth(self, child):
+        self._children.append(child)
+
+class MarginsExceedCanvas(Exception):
+    pass
 
 @dataclass(slots=True)
 class Margin:
     """Margin object. Values defined in pixels"""
+    canvas: Canvas
     top: int = 0
     left: int = 0
     bottom: int = 0
     right: int = 0
 
+    def __post_init__(self):
+        self.canvas.give_birth(self)
+
     def set_margins(self, top: int, left: int, bottom: int, right: int):
-        if top is not int or left is not int or bottom is not int or right is not int:
-            raise "Please only use integer values"
-            return
-        self.top = top
-        self.left = left
-        self.bottom = bottom
-        self.right = right
+        try:
+            if top + bottom > self.canvas.height | left + right > self.canvas.width:
+                print("Margin values exceed canvas dimensions.")
+                raise MarginsExceedCanvas
+        except:
+            self.top = top
+            self.left = left
+            self.bottom = bottom
+            self.right = right
+
+    def needs_update(self):
+        self.is_up_to_date = False   
           
 @dataclass
 class Grid:
     canvas: Canvas
+    margin: Margin
     cols: int = 12
     rows: int = 6
-    margin: Margin = Margin(0,0,0,0)
     gutter: int = 0
 
     def __post_init__(self):
@@ -52,6 +78,7 @@ class Grid:
                              margin.bottom -
                              (self.rows-1) * self.gutter) / self.rows
         self._has_been_computed = True
+
 
 @dataclass
 class Screen:
@@ -90,7 +117,7 @@ class Screen:
 
         self._has_been_computed = True
 
-    def get_values(self) -> list:
+    def get_values(self) -> dict:
         if not self._has_been_computed:
             print("Values have not yet been computed.")
             return
@@ -101,6 +128,47 @@ class Screen:
             "Center.Y": self.y,
             "Size": self.size
         }
-        # print(values)
-        # return [*values.values()]
         return values
+
+def main():
+    canvas = Canvas(500,500)
+    margin = Margin(canvas)
+    grid = Grid(canvas=canvas,margin=margin)
+    screens = [
+        Screen(
+            grid = grid,
+            colspan= 6,
+            rowspan= 6,
+            colx = 1,
+            coly = 1
+        ),
+        Screen(
+            grid = grid,
+            colspan= 6,
+            rowspan= 6,
+            colx = 7,
+            coly = 1
+        )
+    ]
+
+    for screen in screens:
+        screen.compute_values()
+
+    for screen in screens:
+        values = screen.get_values()
+        print(values)
+
+    margin.set_margins(300,300,300,300)
+    # grid.compute_values()
+
+    for screen in screens:
+        screen.compute_values()
+
+    for screen in screens:
+        values = screen.get_values()
+        print(values)
+
+    print(canvas._children)
+
+if __name__ == "__main__":
+    main()
