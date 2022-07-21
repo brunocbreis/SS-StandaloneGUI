@@ -1,0 +1,12 @@
+
+		Background1 = Background {
+
+			Inputs = {
+
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, 0 } },
+		},
+		
+

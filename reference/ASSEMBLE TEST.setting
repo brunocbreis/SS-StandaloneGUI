@@ -1,0 +1,367 @@
+{
+	Tools = ordered() {
+		
+		Canvas1 = Background {
+
+			Inputs = {
+
+					Width = Input { Value = 1920, },
+					Height = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, 0 } },
+	},
+
+	Merge1 = Merge {
+			Inputs = {
+					Background = Input {
+							SourceOp = "Canvas1",
+							Source = "Output",
+					},
+					Foreground = Input {
+							SourceOp = "Screen1",
+							Source = "Output",
+					},
+					EffectMask = Input {
+							SourceOp = "Rectangle1",
+							Source = "Mask",
+					}
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, 33 } },
+	},
+
+	-- replace with MediaIn
+	Screen1 = TextPlus {
+			Inputs = {
+					Width = Input { Value = 1920, },
+					Height = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -110, 33 } },
+	},
+
+	Rectangle1 = RectangleMask {
+			Inputs = {
+					MaskWidth = Input { Value = 1920, },
+					MaskHeight = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 110, 33 } },
+	},
+
+	Merge2 = Merge {
+			Inputs = {
+					Background = Input {
+							SourceOp = "Merge1",
+							Source = "Output",
+					},
+					Foreground = Input {
+							SourceOp = "Screen2",
+							Source = "Output",
+					},
+					EffectMask = Input {
+							SourceOp = "Rectangle2",
+							Source = "Mask",
+					}
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, 66 } },
+	},
+
+	-- replace with MediaIn
+	Screen2 = TextPlus {
+			Inputs = {
+					Width = Input { Value = 1920, },
+					Height = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -110, 66 } },
+	},
+
+	Rectangle2 = RectangleMask {
+			Inputs = {
+					MaskWidth = Input { Value = 1920, },
+					MaskHeight = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 110, 66 } },
+	},
+
+	Merge3 = Merge {
+			Inputs = {
+					Background = Input {
+							SourceOp = "Merge2",
+							Source = "Output",
+					},
+					Foreground = Input {
+							SourceOp = "Screen3",
+							Source = "Output",
+					},
+					EffectMask = Input {
+							SourceOp = "Rectangle3",
+							Source = "Mask",
+					}
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, 99 } },
+	},
+
+	-- replace with MediaIn
+	Screen3 = TextPlus {
+			Inputs = {
+					Width = Input { Value = 1920, },
+					Height = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -110, 99 } },
+	},
+
+	Rectangle3 = RectangleMask {
+			Inputs = {
+					MaskWidth = Input { Value = 1920, },
+					MaskHeight = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 110, 99 } },
+	},
+
+	Merge4 = Merge {
+			Inputs = {
+					Background = Input {
+							SourceOp = "Merge3",
+							Source = "Output",
+					},
+					Foreground = Input {
+							SourceOp = "Screen4",
+							Source = "Output",
+					},
+					EffectMask = Input {
+							SourceOp = "Rectangle4",
+							Source = "Mask",
+					}
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, 132 } },
+	},
+
+	-- replace with MediaIn
+	Screen4 = TextPlus {
+			Inputs = {
+					Width = Input { Value = 1920, },
+					Height = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -110, 132 } },
+	},
+
+	Rectangle4 = RectangleMask {
+			Inputs = {
+					MaskWidth = Input { Value = 1920, },
+					MaskHeight = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 110, 132 } },
+	},
+
+	Merge5 = Merge {
+			Inputs = {
+					Background = Input {
+							SourceOp = "Merge4",
+							Source = "Output",
+					},
+					Foreground = Input {
+							SourceOp = "Screen5",
+							Source = "Output",
+					},
+					EffectMask = Input {
+							SourceOp = "Rectangle5",
+							Source = "Mask",
+					}
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, 165 } },
+	},
+
+	-- replace with MediaIn
+	Screen5 = TextPlus {
+			Inputs = {
+					Width = Input { Value = 1920, },
+					Height = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -110, 165 } },
+	},
+
+	Rectangle5 = RectangleMask {
+			Inputs = {
+					MaskWidth = Input { Value = 1920, },
+					MaskHeight = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 110, 165 } },
+	},
+
+	Merge6 = Merge {
+			Inputs = {
+					Background = Input {
+							SourceOp = "Merge5",
+							Source = "Output",
+					},
+					Foreground = Input {
+							SourceOp = "Screen6",
+							Source = "Output",
+					},
+					EffectMask = Input {
+							SourceOp = "Rectangle6",
+							Source = "Mask",
+					}
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, 198 } },
+	},
+
+	-- replace with MediaIn
+	Screen6 = TextPlus {
+			Inputs = {
+					Width = Input { Value = 1920, },
+					Height = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -110, 198 } },
+	},
+
+	Rectangle6 = RectangleMask {
+			Inputs = {
+					MaskWidth = Input { Value = 1920, },
+					MaskHeight = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 110, 198 } },
+	},
+
+	Merge7 = Merge {
+			Inputs = {
+					Background = Input {
+							SourceOp = "Merge6",
+							Source = "Output",
+					},
+					Foreground = Input {
+							SourceOp = "Screen7",
+							Source = "Output",
+					},
+					EffectMask = Input {
+							SourceOp = "Rectangle7",
+							Source = "Mask",
+					}
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, 231 } },
+	},
+
+	-- replace with MediaIn
+	Screen7 = TextPlus {
+			Inputs = {
+					Width = Input { Value = 1920, },
+					Height = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -110, 231 } },
+	},
+
+	Rectangle7 = RectangleMask {
+			Inputs = {
+					MaskWidth = Input { Value = 1920, },
+					MaskHeight = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 110, 231 } },
+	},
+
+	Merge8 = Merge {
+			Inputs = {
+					Background = Input {
+							SourceOp = "Merge7",
+							Source = "Output",
+					},
+					Foreground = Input {
+							SourceOp = "Screen8",
+							Source = "Output",
+					},
+					EffectMask = Input {
+							SourceOp = "Rectangle8",
+							Source = "Mask",
+					}
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, 264 } },
+	},
+
+	-- replace with MediaIn
+	Screen8 = TextPlus {
+			Inputs = {
+					Width = Input { Value = 1920, },
+					Height = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -110, 264 } },
+	},
+
+	Rectangle8 = RectangleMask {
+			Inputs = {
+					MaskWidth = Input { Value = 1920, },
+					MaskHeight = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 110, 264 } },
+	},
+
+	Merge9 = Merge {
+			Inputs = {
+					Background = Input {
+							SourceOp = "Merge8",
+							Source = "Output",
+					},
+					Foreground = Input {
+							SourceOp = "Screen9",
+							Source = "Output",
+					},
+					EffectMask = Input {
+							SourceOp = "Rectangle9",
+							Source = "Mask",
+					}
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, 297 } },
+	},
+
+	-- replace with MediaIn
+	Screen9 = TextPlus {
+			Inputs = {
+					Width = Input { Value = 1920, },
+					Height = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -110, 297 } },
+	},
+
+	Rectangle9 = RectangleMask {
+			Inputs = {
+					MaskWidth = Input { Value = 1920, },
+					MaskHeight = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 110, 297 } },
+	},
+
+	Merge10 = Merge {
+			Inputs = {
+					Background = Input {
+							SourceOp = "Merge9",
+							Source = "Output",
+					},
+					Foreground = Input {
+							SourceOp = "Screen10",
+							Source = "Output",
+					},
+					EffectMask = Input {
+							SourceOp = "Rectangle10",
+							Source = "Mask",
+					}
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, 330 } },
+	},
+
+	-- replace with MediaIn
+	Screen10 = TextPlus {
+			Inputs = {
+					Width = Input { Value = 1920, },
+					Height = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -110, 330 } },
+	},
+
+	Rectangle10 = RectangleMask {
+			Inputs = {
+					MaskWidth = Input { Value = 1920, },
+					MaskHeight = Input { Value = 1080, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 110, 330 } },
+	},
+
+	},
+
+}
+		

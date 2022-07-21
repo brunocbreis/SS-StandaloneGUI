@@ -1,0 +1,32 @@
+		{{ OUTPUT }} = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "{{ INPUT }}",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "{{ SCREEN_NAME }}",
+					Source = "Output",
+				},
+				EffectMask = Input {
+					SourceOp = "{{ MASK_NAME }}",
+					Source = "Mask",
+				}
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, {{ Y }} } },
+		},
+		-- replace with MediaIn
+		{{ SCREEN_NAME }} = TextPlus {
+			Inputs = {
+				Width = Input { Value = {{ CANVAS_WIDTH }}, },
+				Height = Input { Value = {{ CANVAS_HEIGHT }}, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -110, {{ Y }} } },
+		},
+		{{ MASK_NAME }} = RectangleMask {
+			Inputs = {
+				MaskWidth = Input { Value = {{ CANVAS_WIDTH }}, },
+				MaskHeight = Input { Value = {{ CANVAS_HEIGHT }}, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 110, {{ Y }} } },
+		},
