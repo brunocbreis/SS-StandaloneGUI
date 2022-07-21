@@ -6,5 +6,5 @@
                     Source = "Output",
                 },
             },
-            ViewInfo = OperatorInfo { Pos = { 0, {{ Y }} } },
+            ViewInfo = OperatorInfo { Pos = { 0, {{ NODE_Y }} } },
         }

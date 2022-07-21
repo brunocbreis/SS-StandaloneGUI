@@ -15,13 +15,13 @@
 					Source = "Mask",
 				}
 			},
-			ViewInfo = OperatorInfo { Pos = { 0, {{ Y }} } },
+			ViewInfo = OperatorInfo { Pos = { 0, {{ NODE_Y }} } },
 		},
 		{{ SCREEN_NAME }} = MediaIn {
 			Inputs = {
 				Layer = Input { Value = "{{ SCREEN_INDEX }}", },
 			},
-			ViewInfo = OperatorInfo { Pos = { -110, {{ Y }} } },
+			ViewInfo = OperatorInfo { Pos = { -110, {{ NODE_Y }} } },
 		},
 		{{ MASK_NAME }} = RectangleMask {
 			Inputs = {
@@ -31,5 +31,5 @@
 				MaskWidth = Input { Value = {{ CANVAS_WIDTH }}, },
 				MaskHeight = Input { Value = {{ CANVAS_HEIGHT }}, },
 			},
-			ViewInfo = OperatorInfo { Pos = { 110, {{ Y }} } },
+			ViewInfo = OperatorInfo { Pos = { 110, {{ NODE_Y }} } },
 		},

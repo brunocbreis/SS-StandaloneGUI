@@ -23,7 +23,7 @@ FUSION_OUTPUT = header
 
 # initialize iterable variables
 screen_number = 0
-y = 0
+node_y = 0
 output = "SSCanvas1"
 
 with open(canvas_file, 'r') as template_text:
@@ -32,7 +32,7 @@ with open(canvas_file, 'r') as template_text:
         CANVAS_NAME = output,
         CANVAS_WIDTH = canvas.width,
         CANVAS_HEIGHT = canvas.height,
-        Y = y
+        NODE_Y = node_y
     ) 
 
 FUSION_OUTPUT += render
@@ -43,7 +43,7 @@ FUSION_OUTPUT += render
 # update Variables for the first time, before looping
 input = output
 screen_number += 1
-y += 33
+node_y += 33
 output = f"SSMerge{screen_number}"
 screen_name = f"SSScreen{screen_number}"
 mask_name = f"SSMask{screen_number}"
@@ -71,7 +71,7 @@ for i in range(REPEATS):
             MASK_NAME = mask_name,
             CANVAS_WIDTH = canvas.width,
             CANVAS_HEIGHT = canvas.height,
-            Y = y,
+            NODE_Y = node_y,
             WIDTH = width,
             HEIGHT = height,
             CENTER_X = center_x,
@@ -85,7 +85,7 @@ for i in range(REPEATS):
     output = f"SSMerge{screen_number}"
     screen_name = f"SSScreen{screen_number}"
     mask_name = f"SSMask{screen_number}"
-    y += 33
+    node_y += 33
 
 
 ###### ADD MEDIA OUT ------------------------------------------
@@ -94,7 +94,7 @@ with open(media_out_file, 'r') as template_text:
     template = jinja2.Template(template_text.read())
     render = template.render(
         INPUT = input,
-        Y = y,
+        NODE_Y = node_y,
     ) + "\n"
 FUSION_OUTPUT += render
 
