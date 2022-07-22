@@ -1,4 +1,4 @@
-from ss_classes import *
+from ss_classes import Canvas, Margin, Grid, Screen
 from ss_generator import render_fusion_output, save_preset
 
 ##### CREATE CANVAS -------------------------------
