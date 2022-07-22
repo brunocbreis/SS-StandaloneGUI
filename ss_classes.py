@@ -225,32 +225,24 @@ class Screen:
         '''Returns screen size, normalized.'''
         return max(self.width, self.height)
 
-    # OBSOLETE, BUT MUCH MORE EFFICIENT
-    def compute_values(self, update_grid = True):
-        
-        if update_grid: 
-            self.grid.compute_values()
-
-        if (not self.grid._has_been_computed):
-            print("Grid values have to be computed first.")
-            return False
-
-        grid = self.grid
-        margin = grid.margin
-        
-        width = grid.col_width * self.colspan + (self.colspan-1) * grid.gutter
-        height = grid.row_height * self.rowspan + (self.rowspan-1) * grid.gutter
-        x = width/2 + margin.left + (self.colx - 1) * (grid.col_width + grid.gutter)
-        y = height/2 + margin.bottom + (self.coly - 1) * (grid.row_height + grid.gutter)
-        
-        self.width = width / grid.canvas.width
-        self.height = height / grid.canvas.height
-        self.x = x / grid.canvas.width
-        self.y = y / grid.canvas.height
-        
-        self.size = max(self.width,self.height)
-
-        self._has_been_computed = True
+    @staticmethod
+    def create_from_coords(grid: Grid, point1: int, point2: int):
+        matrix = grid.matrix
+        p1 = min(point1,point2)
+        p2 = max(point1, point2)
+        n = 1
+        for list in matrix:
+            if p2 in list:
+                colspan = list.index(p2) + 2 - p1
+                rowspan = n
+            n +=1
+        colx = p1
+        i = 1
+        for list in matrix:
+            if p1 in list:
+                coly = i
+            i += 1
+        return Screen(grid,colspan,rowspan,colx,coly)
 
     # SIMPLIFIES THE CALLING, COMPUTES ON THE GO    
     def get_values(self) -> dict:
