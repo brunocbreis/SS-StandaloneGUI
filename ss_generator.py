@@ -1,4 +1,3 @@
-from importlib.resources import path
 import jinja2
 from pyperclip import copy
 from ss_classes import Canvas
@@ -6,7 +5,7 @@ from os import listdir
 from os.path import join, isfile
 
 
-def render_fusion_output(canvas: Canvas, screen_values: list[dict]) -> str:
+def render_fusion_output(canvas: Canvas, screen_values: list[dict[str,int]]) -> str:
     """Gets a list of screen values rendered by SplitScreener
        and generates code for use in DaVinci Resolve Fusion
     """
@@ -113,7 +112,7 @@ def render_fusion_output(canvas: Canvas, screen_values: list[dict]) -> str:
     return fusion_output
 
 def save_preset(
-        presets_directory: path, 
+        presets_directory: str, 
         fusion_output: str, 
         preset_name: str = "SplitScreenerPreset") -> None:
 
