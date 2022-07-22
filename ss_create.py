@@ -1,4 +1,5 @@
 from ss_classes import *
+from ss_generator import render_fusion_output, save_preset
 
 ##### CREATE CANVAS -------------------------------
 canvas = Canvas()
@@ -25,15 +26,20 @@ screens = [
     Screen(grid,4,3,9,4)
 ]
 
-
-
 ##### RETURN VALUES -------------------------
 screen_values = []
 for screen in screens:
     screen_value = screen.get_values()
     screen_values.append(screen_value)
 
-SPLIT_SCREENER = SplitScreener(
-    canvas_values=(canvas.width,canvas.height),
-    screen_values=screen_values
-)
+
+##### RENDER OUTPUT -----------------------
+fusion_output = render_fusion_output(canvas, screen_values)
+
+
+##### SAVE PRESET ---------------------------
+want_to_save = input("Choose a name for your new preset. Or press ENTER to leave without saving.\n")
+
+if want_to_save:
+    save_preset('presets',fusion_output,want_to_save)
+    
