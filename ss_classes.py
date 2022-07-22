@@ -255,6 +255,22 @@ class Screen:
         }
         return values
 
+class SplitScreener:
+    '''Packages all of the computed values to pass to the renderer.'''
+    def __init__(self, canvas_values: tuple(int), screen_values: list(dict(float))) -> None:
+        self.canvas = canvas_values
+        self.screens = screen_values
+
+    @property
+    def canvas_width(self) -> int:
+        '''Returns canvas width in pixels'''
+        return self.canvas[0]
+    
+    @property
+    def canvas_height(self) -> int:
+        '''Returns canvas height in pixels'''
+        return self.canvas[1]
+
 def main():
     canvas = Canvas()
     canvas.width = 500

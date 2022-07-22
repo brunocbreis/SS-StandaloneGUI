@@ -28,12 +28,12 @@ screens = [
 
 
 ##### RETURN VALUES -------------------------
-canvas_values = {
-    'Width': canvas.width,
-    'Height': canvas.height
-}
-
 screen_values = []
 for screen in screens:
     screen_value = screen.get_values()
     screen_values.append(screen_value)
+
+SPLIT_SCREENER = SplitScreener(
+    canvas_values=(canvas.width,canvas.height),
+    screen_values=screen_values
+)
