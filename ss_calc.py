@@ -19,8 +19,8 @@ grid.gutter = 30
 
 ##### CREATE SCREENS  ---------------------------
 screens = [
-    Screen(grid,4,6,1,1),
-    Screen(grid,4,6,5,1),
+    Screen.create_from_coords(grid,1,64),
+    Screen.create_from_coords(grid,5,68),
     Screen(grid,4,3,9,1),
     Screen(grid,4,3,9,4)
 ]
