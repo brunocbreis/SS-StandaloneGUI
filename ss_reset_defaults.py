@@ -7,8 +7,8 @@ def reset_defaults():
 
 
     canvas_defaults = {
-        'Width': 1920,
-        'Height': 1080
+        'width': 1920,
+        'height': 1080
     }
     canvas_defaults_file = 'canvas_defaults.pkl'
     with open(join(defaults_dir,canvas_defaults_file), 'wb') as file:
