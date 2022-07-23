@@ -2,10 +2,12 @@ from ss_classes import Canvas, Margin, Grid, Screen
 from pickle import load
 from os import listdir
 from os.path import join
+import ss_user_input_functions as user
 
-print('Welcome to SplitScreener. Loading defaults...\n')
 
 # Load defaults.
+print('Welcome to SplitScreener. Loading defaults...\n')
+
 defaults_files = listdir('defaults')
 defaults_files.sort()
 
@@ -31,4 +33,12 @@ grid.cols, grid.rows, grid.gutter = [grid_defaults[key] for key in [*grid_defaul
 
 print(canvas,margin,grid, sep='\n')
 
-input('Do you want to customize anything? ')
+
+# User customizes setup.
+
+wants_to_customize = user.ask_if_custom_setup() 
+while wants_to_customize:
+    user_choice = user.choose_custom_setup()
+    print(f'You want to change the {user_choice.title()}.')
+    wants_to_customize = user.ask_if_custom_setup(False)
+
