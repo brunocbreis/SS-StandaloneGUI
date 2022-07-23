@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from email import message
 
 @dataclass
 class Canvas:
@@ -8,6 +9,11 @@ class Canvas:
     def __post_init__(self):
         self._width_px = 1920
         self._height_px = 1080
+
+    def __str__(self) -> str:
+        title = 'CANVAS\n'
+        message = f"Width: {self.width}px\tHeight: {self.height}px\n"
+        return title + message
 
     @property
     def width(self) -> int:
@@ -50,6 +56,11 @@ class Margin:
         self._left = 0.0
         self._bottom = 0.0
         self._right = 0.0
+
+    def __str__(self) -> str:
+        title = 'MARGIN\n'
+        message = f'Top: {self._top_px}px\tBottom: {self._right_px}px\nLeft: {self._left_px}px\tRight: {self._right_px}px\n'
+        return title + message
 
     @property
     def top(self) -> int:
@@ -120,6 +131,11 @@ class Grid:
         self._gutter_w = 0.0
         self._gutter_h = 0.0
         self.canvas.give_birth(self.compute)
+
+    def __str__(self) -> str:
+        title = 'GRID\n'
+        message = f'Cols: {self.cols}\tRows: {self.rows}\nGutter: {self._gutter_px}px\n'
+        return title + message
 
     @property
     def cols(self) -> int:
