@@ -1,8 +1,8 @@
 from ss_classes import Canvas, Margin, Grid, Screen
+import ss_user_input_functions as user
 from pickle import load
 from os import listdir
 from os.path import join
-import ss_user_input_functions as user
 
 
 # Load defaults.
