@@ -8,8 +8,7 @@ from time import sleep
 
 
 # Load defaults.
-print('\nWelcome to SplitScreener. Press [ENTER] start.')
-input("")
+input('\nWelcome to SplitScreener. Press [ENTER] start.')
 
 defaults_files = listdir('defaults')
 defaults_files.sort()
@@ -34,7 +33,7 @@ margin.top, margin.left, margin.bottom, margin.right = [margin_defaults[key] for
 grid = Grid(canvas, margin)
 grid.cols, grid.rows, grid.gutter = [grid_defaults[key] for key in [*grid_defaults]]
 
-print("DEFAULT SETTINGS")
+print("\n\nDEFAULT SETTINGS\n")
 print(canvas,margin,grid, sep='\n')
 
 
@@ -62,16 +61,17 @@ while wants_to_customize:
 if not using_defaults:
     print(canvas,margin,grid, sep='\n')
 
-input("Press [ENTER] to continue.")
+input("\nPress [ENTER] to continue.")
 
 
 # User creates screens.
 screens = []
 
-print("\nTime to set up your SplitScreener Screens!")
-print("For each new Screen, you'll be asked to provide 4 values. [ENTER]")
-input("")
-print("WIDTH (measured in columns), HEIGHT (measured in rows),")
+print("\nTime to set up your SplitScreener Screens!\n")
+sleep(.2)
+input("For each new Screen, you'll be asked to provide 4 values. [ENTER]")
+
+print("\nWIDTH (measured in columns), HEIGHT (measured in rows),")
 print(f"X POSITION (1 is the leftmost column, {grid.cols} is the rightmost column),")
 print(f"and Y POSITION (1 being the top row, {grid.rows} being the bottom row.\n")
 sleep(3)
@@ -93,7 +93,7 @@ while wants_more_screens:
     wants_more_screens = user.ask_if_more_screens()
 
 input(f"You have created {len(screens)} Screen{'s' if len(screens) > 1 else ''}. [ENTER]")
-print("Computing SplitScreener values...")
+print("\nComputing SplitScreener values...")
 
 screen_values = []
 for screen in screens:
@@ -103,11 +103,18 @@ for screen in screens:
 sleep(1)
 
 # SplitScreener renders Fusion output
-input("Press [ENTER] to render Fusion output.")
+input("Done! Press [ENTER] to render Fusion output.")
 
 fusion_output = render_fusion_output(canvas, screen_values)
 
-want_to_save = input("Choose a name for your new preset. Or press [ENTER] to leave without saving.\n")
+
+
+want_to_save = input("Choose a name for your new preset. Or press [ENTER] to leave without saving.\n> ")
 
 if want_to_save:
     save_preset('presets',fusion_output,want_to_save)
+    print(f"Preset {want_to_save} saved in the Presets folder.")
+else:
+    print("All right. Paste your result in DaVinci Resolve Fusion and you're good to go.")
+
+print("Have fun SplitScreening!")

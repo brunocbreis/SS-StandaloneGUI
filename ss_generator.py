@@ -107,7 +107,7 @@ def render_fusion_output(canvas: Canvas, screen_values: list[dict[str,int]]) -> 
 
     ###### SAVE TO CLIPBOARD --------------------------------------------
     copy(fusion_output)
-    print("Node tree succesfully copied to clipboard.")
+    print("\nNode tree succesfully copied to clipboard.\n")
 
     return fusion_output
 
