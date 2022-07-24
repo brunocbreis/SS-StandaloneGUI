@@ -1,3 +1,4 @@
+from operator import indexOf
 from ss_classes import Canvas, Margin, Grid, Screen
 import ss_user_input_functions as user
 from ss_generator import render_fusion_output, save_preset
@@ -10,22 +11,25 @@ from time import sleep
 # Load defaults.
 input('\nWelcome to SplitScreener. Press [ENTER] start.')
 
-defaults_files = listdir('defaults')
-defaults_files.sort()
+def load_defaults(defaults_directory: str) -> tuple[str]:
+    defaults_files = listdir(defaults_directory)
+    defaults_files.sort()
 
-defaults = []
-for file in defaults_files:
-    with open(join('defaults',file),'rb') as file:
-        dict = load(file)
-        defaults.append(dict)
+    defaults = []
+    for file in defaults_files:
+        with open(join('defaults',file),'rb') as file:
+            dict = load(file)
+            defaults.append(dict)
 
-canvas_defaults, grid_defaults, margin_defaults = [default for default in defaults]
+    canvas_defaults, grid_defaults, margin_defaults = [default for default in defaults]
+    return (canvas_defaults, grid_defaults, margin_defaults)
+
+canvas_defaults, grid_defaults, margin_defaults = load_defaults('defaults')
 
 
 # Setting up the Canvas and the Grid.
 canvas = Canvas()
-canvas.width = canvas_defaults['width']
-canvas.height = canvas_defaults['height']
+canvas.width, canvas.height = [canvas_defaults[key] for key in [*canvas_defaults]]
 
 margin = Margin(canvas)
 margin.top, margin.left, margin.bottom, margin.right = [margin_defaults[key] for key in [*margin_defaults]]
@@ -61,22 +65,21 @@ while wants_to_customize:
 if not using_defaults:
     print(canvas,margin,grid, sep='\n')
 
-input("\nPress [ENTER] to continue.")
+input("Press [ENTER] to continue.")
 
 
 # User creates screens.
 screens = []
 
-print("\nTime to set up your SplitScreener Screens!\n")
-sleep(.2)
-input("For each new Screen, you'll be asked to provide 4 values. [ENTER]")
+input("\nTime to set up your SplitScreener Screens! [ENTER]")
+
+input("\nFor each new Screen, you'll be asked to provide 4 values. [ENTER]")
 
 print("\nWIDTH (measured in columns), HEIGHT (measured in rows),")
 print(f"X POSITION (1 is the leftmost column, {grid.cols} is the rightmost column),")
-print(f"and Y POSITION (1 being the top row, {grid.rows} being the bottom row.\n")
-sleep(3)
+input(f"and Y POSITION (1 being the top row, {grid.rows} being the bottom row.\t[ENTER]")
 
-input("When you're ready, press [ENTER].")
+input("\nWhen you're ready to start, press [ENTER].")
 
 wants_more_screens = True
 while wants_more_screens:
@@ -105,16 +108,16 @@ sleep(1)
 # SplitScreener renders Fusion output
 input("Done! Press [ENTER] to render Fusion output.")
 
-fusion_output = render_fusion_output(canvas, screen_values)
+fusion_output = render_fusion_output(screen_values, canvas.resolution)
 
 
-
+# Users save presets
 want_to_save = input("Choose a name for your new preset. Or press [ENTER] to leave without saving.\n> ")
 
 if want_to_save:
     save_preset('presets',fusion_output,want_to_save)
-    print(f"Preset {want_to_save} saved in the Presets folder.")
+    print(f"\nPreset {want_to_save} saved in the Presets folder.\n\n")
 else:
-    print("All right. Paste your result in DaVinci Resolve Fusion and you're good to go.")
+    print("\n\nAll right. Paste your result in DaVinci Resolve Fusion and you're good to go.\n")
 
-print("Have fun SplitScreening!")
+print("Have fun SplitScreening!\n")

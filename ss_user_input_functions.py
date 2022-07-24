@@ -17,7 +17,7 @@ def ask_if_custom_setup(first_time: bool = True) -> bool:
             break
         if wants_to_customize in ['no', 'n']:
             wants_to_customize = False
-            print(f'Ok. {verb}ing with {adjective} settings.')
+            print(f'\nOk. {verb}ing with {adjective} settings.\n')
             break
         print("I'm sorry, I don't understand. Let's try again:")
 
@@ -75,7 +75,7 @@ def customize_grid() -> list[int]:
 # Screen input functions
 def ask_if_more_screens() -> bool:
     while True:
-        wants_more_screens = input('Do you want to create another Screen? (yes / no)\n> ').lower()
+        wants_more_screens = input('\nDo you want to create another Screen? (yes / no)\n> ').lower()
         if wants_more_screens in ['yes', 'y']:
             wants_more_screens = True
             break

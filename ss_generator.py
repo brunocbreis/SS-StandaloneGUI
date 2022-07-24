@@ -1,22 +1,28 @@
 import jinja2
 from pyperclip import copy
-from ss_classes import Canvas
 from os import listdir
 from os.path import join, isfile
 
 
-def render_fusion_output(canvas: Canvas, screen_values: list[dict[str,int]]) -> str:
+def render_fusion_output(screen_values: list[dict[str,int]], resolution: tuple[int] = (1920,1080)) -> str:
     """Gets a list of screen values rendered by SplitScreener
        and generates code for use in DaVinci Resolve Fusion
     """
 
     ###### LOAD TEMPLATES ---------------------------------------------
     template_path = 'templates'
-    header_file = join(template_path, '1_header.setting')
-    canvas_file = join(template_path, '2_generate_canvas.setting')
-    screen_file = join(template_path, '3_generate_screen.setting')
-    media_out_file = join(template_path, '4_media_out.setting')
-    footer_file = join(template_path, '5_footer.setting')
+    template_file_extension = '.setting'
+    template_file_names = [
+        '1_header',
+        '2_generate_canvas',
+        '3_generate_screen',
+        '4_media_out',
+        '5_footer'
+        ]
+    
+    header_file, canvas_file, screen_file, media_out_file, footer_file = [
+        join(template_path, file + template_file_extension) for file in template_file_names
+        ]
 
 
     ######## CREATE HEADER --------------------------------------------
@@ -28,6 +34,7 @@ def render_fusion_output(canvas: Canvas, screen_values: list[dict[str,int]]) -> 
 
 
     ####### CREATE CANVAS --------------------------------------------
+    canvas_width, canvas_height = [value for value in resolution]
     screen_number = 0
     node_y = 0
     node_output = "SSCanvas1" # The first node's name is also the first output.
@@ -36,8 +43,8 @@ def render_fusion_output(canvas: Canvas, screen_values: list[dict[str,int]]) -> 
         template = jinja2.Template(template_text.read())
         render = template.render(
             CANVAS_NAME = node_output,
-            CANVAS_WIDTH = canvas.width,
-            CANVAS_HEIGHT = canvas.height,
+            CANVAS_WIDTH = canvas_width,
+            CANVAS_HEIGHT = canvas_height,
             NODE_Y = node_y
         ) 
 
@@ -68,8 +75,8 @@ def render_fusion_output(canvas: Canvas, screen_values: list[dict[str,int]]) -> 
                 SCREEN_NAME = screen_name,
                 SCREEN_INDEX = screen_number - 1,
                 MASK_NAME = mask_name,
-                CANVAS_WIDTH = canvas.width,
-                CANVAS_HEIGHT = canvas.height,
+                CANVAS_WIDTH = canvas_width,
+                CANVAS_HEIGHT = canvas_height,
                 NODE_Y = node_y,
                 WIDTH = width,
                 HEIGHT = height,

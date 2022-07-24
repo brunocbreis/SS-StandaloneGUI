@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-import numpy as np
 
 @dataclass
 class Canvas:
@@ -37,6 +36,10 @@ class Canvas:
 
     def give_birth(self, child):
         self._children.append(child)
+
+    @property
+    def resolution(self) -> tuple[int]:
+        return (self.width, self.height)
 
 class MarginsExceedCanvas(Exception):
     """Error for when margins are too big. Should be called when changin resolution or margins"""
@@ -189,7 +192,7 @@ class Grid:
             x = row * self.cols + 1
             matrix_row = [col + x for col in range(self.cols)]
             matrix.append(matrix_row)
-        return np.array(matrix)
+        return matrix
 
     def compute(self) -> None: 
         '''Recomputes normalized values for when something has changed in parent classes.'''
