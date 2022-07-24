@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from email import message
+import numpy as np
 
 @dataclass
 class Canvas:
@@ -189,7 +189,7 @@ class Grid:
             x = row * self.cols + 1
             matrix_row = [col + x for col in range(self.cols)]
             matrix.append(matrix_row)
-        return matrix
+        return np.array(matrix)
 
     def compute(self) -> None: 
         '''Recomputes normalized values for when something has changed in parent classes.'''
@@ -272,7 +272,7 @@ class Screen:
         return values
 
 
-def main():
+def test():
     canvas = Canvas()
     canvas.width = 500
     canvas.height = 500
@@ -295,5 +295,9 @@ def main():
         )
     ]
 
+    grid.cols = 5
+    grid.rows = 3
+    print(grid.matrix)
+
 if __name__ == "__main__":
-    main()
+    test()
