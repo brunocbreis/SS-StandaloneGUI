@@ -209,6 +209,10 @@ class Screen:
     def __post_init__(self):
         self._has_been_computed = False
 
+    def __str__(self) -> str:
+        message = f'Colw: {self.colspan}\tRoww: {self.rowspan}\nColx: {self.colx}\tColy: {self.coly}\n'
+        return message
+
     @property
     def width(self) -> float:
         '''Returns screen width, normalized.'''
@@ -298,9 +302,16 @@ def test():
         )
     ]
 
-    grid.cols = 5
-    grid.rows = 3
+    # grid.cols = 5
+    # grid.rows = 3
     print(grid.matrix)
+
+    coords = (1,34)
+
+    screens.append(Screen.create_from_coords(grid,*coords))
+
+    print(screens)
+
 
 if __name__ == "__main__":
     test()
