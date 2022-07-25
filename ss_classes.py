@@ -198,6 +198,13 @@ class Grid:
         '''Recomputes normalized values for when something has changed in parent classes.'''
         self.gutter = self._gutter_px
 
+def get_coords(item, matrix: list[list]):
+  for i in range(len(matrix)):
+    if item in matrix[i]:
+      y = i
+      x = matrix[i].index(item)
+  return x+1, y+1
+
 @dataclass
 class Screen:
     grid: Grid
@@ -251,20 +258,28 @@ class Screen:
     @staticmethod
     def create_from_coords(grid: Grid, point1: int, point2: int):
         matrix = grid.matrix
-        p1 = min(point1,point2)
-        p2 = max(point1, point2)
-        n = 1
-        for list in matrix:
-            if p2 in list:
-                colspan = list.index(p2) + 2 - p1
-                rowspan = n
-            n +=1
-        colx = p1
-        i = 1
-        for list in matrix:
-            if p1 in list:
-                coly = i
-            i += 1
+        p1 = get_coords(point1,matrix)
+        # p1 = min(point1,point2)
+        p2 = get_coords(point2,matrix)
+        # p2 = max(point1, point2)
+
+        colspan = abs(p1[0] - p2[0]) + 1
+        rowspan = abs(p1[1] - p2[1]) + 1
+        colx = min(p1[0], p2[0])
+        coly = min(p1[1], p2[1])
+
+        # n = 1
+        # for list in matrix:
+        #     if p2 in list:
+        #         colspan = list.index(p2) + 2 - p1
+        #         rowspan = n
+        #     n +=1
+        # colx = p1
+        # i = 1
+        # for list in matrix:
+        #     if p1 in list:
+        #         coly = i
+        #     i += 1
         return Screen(grid,colspan,rowspan,colx,coly)
 
     # SIMPLIFIES THE CALLING, COMPUTES ON THE GO    
