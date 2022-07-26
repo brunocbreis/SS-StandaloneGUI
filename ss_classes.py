@@ -248,6 +248,7 @@ class Screen:
         grid = self.grid
         margin = grid.margin
         y = self.height/2 + margin.bottom + (self.coly - 1) * (grid.row_height + grid.gutter[1])
+        y = 1 - y
         return y
 
     @property

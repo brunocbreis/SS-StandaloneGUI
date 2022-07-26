@@ -64,6 +64,7 @@ def create_grid_blocks() -> list[list[ss.Screen]]:
             block = ss.Screen(ss_grid,1,1,col+1,row+1)
             grid_blocks_row.append(block)
         grid_blocks.append(grid_blocks_row)
+        # grid_blocks.reverse()
     
     return grid_blocks
 
@@ -79,14 +80,20 @@ def refresh_grid(root: Tk, screens_only: bool = False):
         # Creating ss.Screen objects for each grid block
         grid_blocks = create_grid_blocks()
 
-        # CREATING widgets
-        for row_index in range(len(grid_blocks)):
-            row = grid_blocks[row_index]
+        # CREATING widgets and indexing them
+        for block_y in range(len(grid_blocks)):
+            row = grid_blocks[block_y]
 
-            for col_index in range(len(row)):
-                block = row[col_index]
+            nrows = len(grid_blocks)
+            ncols = len(row)
+
+            for block_x in range(len(row)):
+                block = row[block_x]
                 widget = widget_from_screen(root,block,original_color,grid_block_widgets)
-                widget.index = col_index+1 + row_index * len(row)
+                
+                widget.index = block_x + 1 + block_y * ncols
+                # widget.index = (nrows - block_y)  + block_x + (nrows-block_y-1)*(ncols-1) # fixed display, adds mirrored screen
+                widget.config(text = widget.index)
                 grid_state_1(widget)
 
         
@@ -104,7 +111,7 @@ def refresh_grid(root: Tk, screens_only: bool = False):
         delete_widgets(screen_widgets)
         # render_all_screens(root,list_of_ssscreens)
         for screen in list_of_ssscreens:
-            widget_from_screen(root, screen, "yellow", screen_widgets)
+            widget_from_screen(root, screen, screen_color, screen_widgets)
         for screen_widget in screen_widgets:
             place_screen_widget(screen_widget)
 
@@ -194,8 +201,8 @@ def update_grid(root: Tk, canvas: ss.Canvas, width: int, height: int, scale_labe
 
     canvas_width, canvas_height = update_canvas_dimensions(canvas)
     root.config(width=canvas_width, height=canvas_height)
-    root.grid_forget()
-    root.grid(padx=(770-canvas_width)/2, pady=(620-canvas_height)/2, row = 3, column=2)
+    # root.grid_forget()
+    # root.grid(padx=(770-canvas_width)/2, pady=(620-canvas_height)/2, row = 3, column=2)
 
     scale = canvas_width / canvas.width * 100
     scale_label.config(text=f"Preview scale: {scale: .1f}%")
@@ -245,6 +252,7 @@ def render_for_fusion(screens: list[ss.Screen], canvas: ss.Canvas):
 hover_color = "#0000cc"
 original_color = "#0000ff"
 click_color = "#8888ff"
+screen_color = "yellow"
 
 # STATE OF BUTTONS ===========
 def grid_state_1(widget: Widget):
