@@ -1,12 +1,14 @@
+import pyperclip
 import ss_classes as ss
 from tkinter import *
-from ss_generator import render_fusion_output
+from fusion_tool_generator import render_fusion_output
 
 # GLOBAL VARIABLES AND LISTS ========================
 grid_block_widgets = []
 screen_widgets = []
 list_of_ssscreens = []
 coords = [1,1]
+fusion_studio = False
 
 
 # SPLIT SCREENER VARS ========================
@@ -241,12 +243,14 @@ def generate_entry(root: Frame, name: str, rownumber: int, colnumber: int, defau
 
 
 # OUTPUTTING FUNCTIONS
-def render_for_fusion(screens: list[ss.Screen], canvas: ss.Canvas):
+def render_for_fusion(screens: list[ss.Screen], canvas: ss.Canvas) -> str:
     screen_values = []
     for screen in screens:
         screen_value = screen.get_values()
         screen_values.append(screen_value)
-    render_fusion_output(screen_values,canvas.resolution)
+    fusion_output = render_fusion_output(screen_values,canvas.resolution)
+    pyperclip.copy(fusion_output)
+    return fusion_output
 
 # COLOR PALETTE =====================
 hover_color = "#0000cc"
