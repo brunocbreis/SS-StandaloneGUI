@@ -134,6 +134,7 @@ def add_screen(root: Tk, coords: list[int,int] = coords):
 
     for block in grid_block_widgets:
         grid_state_1(block)
+        block.config(bg = original_color)
 
 def add_cols(root: Tk, amount: int = 1):
     ss_grid.cols = ss_grid.cols + amount
@@ -152,12 +153,28 @@ def register_first_coord(event: Event):
 
 def register_second_coord(event: Event):
 
-    for block in grid_block_widgets:
-        pass
+    x,y = event.widget.winfo_pointerxy()
+    widget_released_on = event.widget.winfo_containing(x, y)
 
-    event.widget.config(bg = click_color)
-    coords.append(event.widget.index)
+    # widget_released_on.config(bg = click_color)
+
+    coords.append(widget_released_on.index)
+
+    for block in grid_block_widgets:
+        block_x, block_y = ss.get_coords(block.index,ss_grid.matrix)
+        coords_1, coords_2 = ss.get_coords(coords[0],ss_grid.matrix), ss.get_coords(coords[1],ss_grid.matrix)
+        coords_x, coords_y = (coords_1[0], coords_2[0]+1), (coords_1[1], coords_2[1]+1)
+        xspan = abs(coords_x[0] - coords_x[1])+1
+        yspan = abs(coords_y[0] - coords_y[1])+1
+
+        if block_x in range(*coords_x):
+            if block_y in range(*coords_y):
+        
+                block.config(bg = click_color)
+
+
     print(coords)
+    # print(ss.get_coords(coords[0],ss_grid.matrix), ss.get_coords(coords[1],ss_grid.matrix))
 
 def clear_screens():
     delete_widgets(screen_widgets)
@@ -179,7 +196,7 @@ def grid_state_2(widget: Widget):
     widget.unbind("<Leave>")
     widget.unbind("<Enter>")
     widget.unbind("<Button-1>")
-    widget.bind("<Button-1>", register_second_coord)
+    widget.bind("<ButtonRelease-1>", register_second_coord)
 
 def darker_color(event: Event):
     widget = event.widget
@@ -235,12 +252,12 @@ def main():
     add_screen_button = Button(text="Add Screen", command=lambda: add_screen(canvas, coords))
     add_screen_button.grid(row=4)
     clear_all_button = Button(text="Clear Screens", command=clear_screens)
-    clear_all_button.grid(row=6)
+    clear_all_button.grid(row=5)
     
 
-    screen_size_entry = Entry(root,width=2)
-    screen_size_entry.insert(0, "5")
-    screen_size_entry.grid(row=5)
+    # screen_size_entry = Entry(root,width=2)
+    # screen_size_entry.insert(0, "5")
+    # screen_size_entry.grid(row=5)
 
 
 
