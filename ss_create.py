@@ -1,5 +1,7 @@
+import pyperclip
 from ss_classes import Canvas, Margin, Grid, Screen
 from ss_generator import render_fusion_output, save_preset
+import fusion_tool_generator as fu
 
 def main():
 
@@ -36,8 +38,8 @@ def main():
 
 
     ##### RENDER OUTPUT -----------------------
-    fusion_output = render_fusion_output(screen_values, canvas.resolution)
-
+    fusion_output = fu.render_fusion_output(screen_values, canvas.resolution, True)
+    pyperclip.copy(fusion_output)
 
     ##### SAVE PRESET ---------------------------
     want_to_save = input("Choose a name for your new preset. Or press ENTER to leave without saving.\n")
