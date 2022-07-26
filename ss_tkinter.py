@@ -1,8 +1,6 @@
-from turtle import Screen
 import ss_classes as ss
 from tkinter import *
-
-
+from ss_generator import render_fusion_output
 
 # GLOBAL VARIABLES AND LISTS ========================
 grid_block_widgets = []
@@ -46,7 +44,7 @@ def place_screen_widget(widget: Widget) -> None:
     screen = widget.screen
 
     relx = screen.x - screen.width/2
-    rely = screen.y - screen.height/2
+    rely = 1 - (screen.y + screen.height/2)
     relw = screen.width
     relh = screen.height
 
@@ -174,12 +172,63 @@ def register_second_coord(event: Event):
 
 
     print(coords)
-    # print(ss.get_coords(coords[0],ss_grid.matrix), ss.get_coords(coords[1],ss_grid.matrix))
 
 def clear_screens():
     delete_widgets(screen_widgets)
     list_of_ssscreens.clear()
     print(list_of_ssscreens)
+
+def update_grid(root: Tk, canvas: ss.Canvas, width: int, height: int, scale_label: Label,
+                margin: ss.Margin, top: int, left: int, bottom: int, right: int,
+                grid: ss.Grid, cols: int, rows: int, gutter: int) -> None:
+    
+    # update canvas
+    canvas.width, canvas.height = width, height
+
+    canvas_width, canvas_height = update_canvas_dimensions(canvas)
+    root.config(width=canvas_width, height=canvas_height)
+
+    scale = canvas_width / canvas.width * 100
+    scale_label.config(text=f"Preview scale: {scale: .1f}%")
+
+    # update margin
+    margin.top, margin.left, margin.bottom, margin.right = top, left, bottom, right
+
+    # update grid
+    grid.cols, grid.rows, grid.gutter = cols, rows, gutter
+    refresh_grid(root)
+
+def update_canvas_dimensions(canvas: ss.Canvas) -> tuple[int]:
+    aspect_ratio = canvas.width/canvas.height
+    max_geometry = 750
+
+    if aspect_ratio > 1:
+        canvas_width = max_geometry
+        canvas_height = canvas_width / aspect_ratio
+    else:
+        canvas_height = max_geometry
+        canvas_width = canvas_height * aspect_ratio
+    return canvas_width, canvas_height
+
+# WIDGET CREATION FUNCTIONS
+def generate_entry(root: Frame, name: str, rownumber: int, colnumber: int, default_value: int, save_at: dict[str,tuple[Widget]]) -> None:
+        label = Label(root, text=f"{name}:", justify=LEFT, padx=20)
+        label.grid(row=rownumber, column=colnumber)
+
+        entry = Entry(root, width=5, justify=RIGHT)
+        entry.insert(0,default_value)
+        entry.grid(row=rownumber, column=colnumber+1, padx = 20)
+
+        save_at[name] = (label,entry)
+
+
+# OUTPUTTING FUNCTIONS
+def render_for_fusion(screens: list[ss.Screen], canvas: ss.Canvas):
+    screen_values = []
+    for screen in screens:
+        screen_value = screen.get_values()
+        screen_values.append(screen_value)
+    render_fusion_output(screen_values,canvas.resolution)
 
 # COLOR PALETTE =====================
 hover_color = "#0000cc"
@@ -218,7 +267,7 @@ def main():
     root = Tk()
 
     # SETTING UP THE MAIN WINDOW ======================
-    x = 1440
+    x = 1200
     y = 900
     dim = {
         "x": x,
@@ -232,44 +281,79 @@ def main():
     #Root Window
     root.title('SplitScreener')
     root.geometry(f"{dim['x']}x{dim['y']}+{dim['screenx_center'] - int(dim['x']/2)}+{dim['screeny_center'] - int(dim['y']/2)}")
-    root.resizable(False,False)
-    root.configure(background = "#FFFFFF")
+    # root.resizable(False,False)
 
 
-    canvas = Canvas(root, width = ss_canvas.width/2, height = ss_canvas.height/2, bg="#1e1e1e", bd=0, highlightthickness=0, relief='ridge')
-    canvas.grid(padx=100, pady=80)
+    canvas_width, canvas_height = update_canvas_dimensions(ss_canvas)
 
+    # spacer on top
+    Label(height=3).grid(row=1)
+
+
+    # scale label
+    scale = canvas_width / ss_canvas.width * 100
+    preview_scale_lbl = Label(text=f"Preview scale: {scale: .1f}%", justify=LEFT, pady=0, padx = 20,font="Archivo 12")
+    preview_scale_lbl.grid(column=2,row=2,sticky=E,pady=0)
+
+    # the canvas
+    canvas = Canvas(root, width = canvas_width, height = canvas_height, bg="#1e1e1e", bd=0, highlightthickness=0, relief='ridge')
+    canvas.grid(padx=20, pady=20, row = 3, column=2)
+    
+    # the render button
+    render_button = Button(height=2,font="Archivo 16", text="Render Fusion Output", command=lambda: render_for_fusion(list_of_ssscreens, ss_canvas))
+    render_button.grid(column=2, row=   4)
+    
+    
     # RENDER GRID FOR THE FIRST TIME ====================
     refresh_grid(canvas)
 
 
 
     # ADDING SOME BUTTONS ======================
-    add_col_button = Button(text="Add Column", command=lambda: add_cols(canvas))
-    add_col_button.grid(row=2)
-    rem_col_button = Button(text="Remove Column", command=lambda: add_cols(canvas, -1))
-    rem_col_button.grid(row=3)
-    add_screen_button = Button(text="Add Screen", command=lambda: add_screen(canvas, coords))
-    add_screen_button.grid(row=4)
-    clear_all_button = Button(text="Clear Screens", command=clear_screens)
-    clear_all_button.grid(row=5)
-    
+    button_frame_left = Frame(bd=0, highlightthickness=0, relief='ridge')
+    button_frame_left.grid(column=1, row =3)
 
-    # screen_size_entry = Entry(root,width=2)
-    # screen_size_entry.insert(0, "5")
-    # screen_size_entry.grid(row=5)
+    button_frame_right = Frame(bd=0, highlightthickness=0, relief='ridge')
+    button_frame_right.grid(column=3, row =3)
 
 
+    add_screen_button = Button(button_frame_right, text="Add Screen", command=lambda: add_screen(canvas, coords))
+    add_screen_button.grid(row=3, column = 2,pady=10)
 
+    clear_all_button = Button(button_frame_right, text="Clear Screens", command=clear_screens)
+    clear_all_button.grid(row=4, column = 2,pady=10)
     
 
-    
-    # STATE1: never clicked
-    # STATE2: clicked on first widget
+    # CANVAS SETTINGS
+    canvas_entries = {}
+    generate_entry(button_frame_left, "Width",  1, 1, ss_canvas.width,     canvas_entries)
+    generate_entry(button_frame_left, "Height", 2, 1, ss_canvas.height,    canvas_entries)
+    Label(button_frame_left, height=1).grid(row=3, column=1)
 
-    
-    
-    
+    # MARGIN SETTINGS 4,5,6,7,8
+    margin_entries = {}
+    generate_entry(button_frame_left, "Top",     4, 1, ss_margin._top_px,       margin_entries)
+    generate_entry(button_frame_left, "Left",    5, 1, ss_margin._left_px,      margin_entries)
+    generate_entry(button_frame_left, "Bottom",  6, 1, ss_margin._bottom_px,    margin_entries)
+    generate_entry(button_frame_left, "Right",   7, 1, ss_margin._right_px,     margin_entries)
+    Label(button_frame_left, height=1).grid(row= 8, column=1)
+
+    # GRID SETTINGS 9,10,11,12,13==================
+    grid_entries = {}
+    generate_entry(button_frame_left, "Cols",    9, 1, ss_grid.cols,       grid_entries)
+    generate_entry(button_frame_left, "Rows",   10, 1, ss_grid.rows,       grid_entries)
+    generate_entry(button_frame_left, "Gutter", 11, 1, ss_grid._gutter_px, grid_entries)
+    Label(button_frame_left, height=1).grid(row=12, column=1)
+
+    update_grid_button = Button(
+        button_frame_left, text="Update Grid", command=lambda: update_grid(canvas, ss_canvas,
+            int(canvas_entries['Width'][1].get()), int(canvas_entries['Height'][1].get()), preview_scale_lbl,
+            ss_margin, int(margin_entries['Top'][1].get()), int(margin_entries['Left'][1].get()), int(margin_entries['Bottom'][1].get()), int(margin_entries['Right'][1].get()),
+            ss_grid, int(grid_entries['Cols'][1].get()), int(grid_entries['Rows'][1].get()), int(grid_entries['Gutter'][1].get())
+            )
+    )
+    update_grid_button.grid(row=13, column=1, columnspan=2)
+
     
     
     
