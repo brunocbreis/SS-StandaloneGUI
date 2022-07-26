@@ -1,4 +1,6 @@
 from jinja2 import Template
+import pickle
+import os
 
 def add_inputs(**kwargs) -> str:
     """Creates strings for adding inputs to Fusion tools"""
@@ -100,6 +102,40 @@ def render_fusion_output(screen_values: list[dict[str,int]], resolution: tuple[i
     fusion_output = wrap_for_fusion(fusion_canvas + fusion_screens + fusion_media_out)
 
     return fusion_output
+
+
+
+# defaults and presets
+
+def load_defaults(defaults_directory: str) -> tuple[str]:
+     defaults_files = os.listdir(defaults_directory)
+     defaults_files.sort()
+
+     defaults = []
+     for file in defaults_files:
+         with open(os.path.join('defaults',file),'rb') as file:
+             dict = pickle.load(file)
+             defaults.append(dict)
+
+     canvas_defaults, grid_defaults, margin_defaults = [default for default in defaults]
+     return (canvas_defaults, grid_defaults, margin_defaults)
+
+
+def save_preset_for_fusion(
+        presets_directory: str, 
+        fusion_output: str, 
+        preset_name: str = "SplitScreenerPreset") -> None:
+
+    presets_directory = presets_directory
+    preset_files = [f for f in os.listdir(presets_directory) if os.path.isfile(os.path.join(presets_directory, f))]
+    preset_file_name = f"{preset_name}.setting"
+    i = 0
+    while preset_file_name in preset_files:
+        i += 1
+        preset_file_name = f"{preset_name}_{i}.setting"
+
+    with open(os.path.join(presets_directory,preset_file_name), 'w') as new_preset_file:
+        new_preset_file.write(fusion_output)
 
 
 # testing area

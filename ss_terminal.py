@@ -1,7 +1,7 @@
 from operator import indexOf
 from ss_classes import Canvas, Margin, Grid, Screen
 import ss_user_input_functions as user
-from ss_generator import render_fusion_output, save_preset, load_defaults
+from fusion_tool_generator import render_fusion_output, save_preset_for_fusion, load_defaults
 from time import sleep
 
 
@@ -99,7 +99,7 @@ fusion_output = render_fusion_output(screen_values, canvas.resolution)
 want_to_save = input("Choose a name for your new preset. Or press [ENTER] to leave without saving.\n> ")
 
 if want_to_save:
-    save_preset('presets',fusion_output,want_to_save)
+    save_preset_for_fusion('presets',fusion_output,want_to_save)
     print(f"\nPreset {want_to_save} saved in the Presets folder.\n\n")
 else:
     print("\n\nAll right. Paste your result in DaVinci Resolve Fusion and you're good to go.\n")

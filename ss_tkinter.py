@@ -8,7 +8,7 @@ grid_block_widgets = []
 screen_widgets = []
 list_of_ssscreens = []
 coords = [1,1]
-fusion_studio = False
+
 
 
 # SPLIT SCREENER VARS ========================
@@ -243,12 +243,14 @@ def generate_entry(root: Frame, name: str, rownumber: int, colnumber: int, defau
 
 
 # OUTPUTTING FUNCTIONS
-def render_for_fusion(screens: list[ss.Screen], canvas: ss.Canvas) -> str:
+def render_for_fusion(screens: list[ss.Screen], canvas: ss.Canvas, fusion_studio: IntVar) -> str:
+    fusion_studio = bool(fusion_studio.get())
+
     screen_values = []
     for screen in screens:
         screen_value = screen.get_values()
         screen_values.append(screen_value)
-    fusion_output = render_fusion_output(screen_values,canvas.resolution)
+    fusion_output = render_fusion_output(screen_values,canvas.resolution,fusion_studio)
     pyperclip.copy(fusion_output)
     return fusion_output
 
@@ -288,6 +290,7 @@ def selected_color(event: Event):
 def main():
 
     root = Tk()
+    fusion_studio = IntVar()
 
     # SETTING UP THE MAIN WINDOW ======================
     x = 1200
@@ -323,9 +326,12 @@ def main():
     canvas.grid(padx=10, pady=10, row = 3, column=2)
     
     # the render button
-    render_button = Button(height=2,font="Archivo 16", text="Render Fusion Output", command=lambda: render_for_fusion(list_of_ssscreens, ss_canvas))
+    render_button = Button(root,height=2,font="Archivo 16", text="Render Fusion Output", command=lambda: render_for_fusion(list_of_ssscreens, ss_canvas,fusion_studio))
     render_button.grid(column=2, row=   4)
     
+    # fusion studio checkbox
+    fu_studio_checkbox = Checkbutton(root,text="Fusion Studio (doesn't create MediaIns and Outs)", justify=LEFT,variable=fusion_studio, font="Archivo 10")
+    fu_studio_checkbox.grid(column=2, row=5 )
     
     # RENDER GRID FOR THE FIRST TIME ====================
     refresh_grid(canvas)
