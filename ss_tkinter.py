@@ -28,36 +28,30 @@ ss_grid.rows = 6
 def delete_widgets(list_of_widgets: list[Widget]):
     for widget in list_of_widgets:
         widget.place_forget()
-    
+        widget.destroy()
+    list_of_widgets.clear()
 
-def widget_from_screen(root: Tk, screen: ss.Screen, color: str) -> Widget:
+def widget_from_screen(root: Tk, screen: ss.Screen, color: str, widget_list: list[Widget]) -> Widget:
     """Creates a Label widget from an ss.Screen object and assigns the screen to it as a property."""
 
     widget = Label(root, bg=color, bd=0, highlightthickness=0, relief='ridge')
     widget.screen = screen
-    widget.color = color
+
+    widget_list.append(widget)
 
     return widget
 
-def place_screen_widget(root: Tk, screen: ss.Screen, color: str, group: list[Widget], append: bool = True) -> Widget:
+def place_screen_widget(widget: Widget) -> None:
     """Renders one label widget from a ss.Screen object and appends it to a group."""
+    screen = widget.screen
 
     relx = screen.x - screen.width/2
     rely = screen.y - screen.height/2
     relw = screen.width
     relh = screen.height
 
-    widget = Label(root, bg=color, bd=0, highlightthickness=0, relief='ridge')
     widget.place(relwidth=relw,relheight=relh, anchor=NW, relx=relx, rely=rely, bordermode='outside')
     
-    if append:
-        group.append(widget)
-    return widget
-
-def render_all_screens(root: Tk, group: list[ss.Screen]):
-    for screen in group:
-        place_screen_widget(root, screen, "yellow", screen_widgets)
-
 def create_grid_blocks() -> list[list[ss.Screen]]:
     """
     The preview grid is just a bunch of Screens that are 1x1 in size.
@@ -75,38 +69,47 @@ def create_grid_blocks() -> list[list[ss.Screen]]:
     
     return grid_blocks
 
-def refresh_grid(root: Tk):
+def refresh_grid(root: Tk, screens_only: bool = False):
     """
     Every time the user makes any change to the grid settings, 
     it must be re-rendered so that it previews correctly.
     """
-    
-    if len(grid_block_widgets) > 0: # would mean no grid has ever been rendered
-        delete_widgets(grid_block_widgets)
-    
-    there_are_screens = False # assume the grid is empty
-    if len(screen_widgets) > 0: # would mean no screens have been rendered
-        there_are_screens = True
+    if not screens_only:
+        if len(grid_block_widgets) > 0: # would mean no grid has ever been rendered
+            delete_widgets(grid_block_widgets)
+         
+        # Creating ss.Screen objects for each grid block
+        grid_blocks = create_grid_blocks()
+
+        # CREATING widgets
+        for row_index in range(len(grid_blocks)):
+            row = grid_blocks[row_index]
+
+            for col_index in range(len(row)):
+                block = row[col_index]
+                widget = widget_from_screen(root,block,original_color,grid_block_widgets)
+                widget.index = col_index+1 + row_index * len(row)
+                grid_state_1(widget)
+
         
-    
-    # Creating actual ss.Screen objects for each grid block
-    grid_blocks = create_grid_blocks()
+        # PLACING widgets
+        for widget in grid_block_widgets:
+            place_screen_widget(widget)
 
-    # Rendering the ss.Screen blocks as Label widgets
-    for row_of_blocks_index in range(len(grid_blocks)):
-        row = grid_blocks[row_of_blocks_index]
+    there_are_screens = False # assume the grid is empty
+    if len(list_of_ssscreens) > 0: # would mean no screen widgets have been created
+        there_are_screens = True
 
-        for block_index in range(len(row)):
-            block = row[block_index]
-            widget = place_screen_widget(root,block,original_color,grid_block_widgets)
-            widget.index = block_index+1 + row_of_blocks_index * len(row)
-            grid_state_1(widget)
-    
             
     # Re-rendering screens on top of the grid 
     if there_are_screens:
         delete_widgets(screen_widgets)
-        render_all_screens(root,list_of_ssscreens)
+        # render_all_screens(root,list_of_ssscreens)
+        for screen in list_of_ssscreens:
+            widget_from_screen(root, screen, "yellow", screen_widgets)
+        for screen_widget in screen_widgets:
+            place_screen_widget(screen_widget)
+
 
 
 # USER INTERACTION FUNCTIONS
@@ -114,10 +117,21 @@ def refresh_grid(root: Tk):
 def add_screen(root: Tk, coords: list[int,int] = coords):
     """Creates a ss.Screen object and appends it to a group. Calls the render_screen function"""
     print("Adding screen...")
-    new_screen = ss.Screen.create_from_coords(ss_grid, *coords)  #int(screen_size_entry.get())
+    try:
+        new_screen = ss.Screen.create_from_coords(ss_grid, *coords)  #int(screen_size_entry.get())
+    except:
+        print("Can't create screen. Have you tried resetting the coordinates?")
+        return
     print(new_screen)
-    place_screen_widget(root, new_screen, "yellow", screen_widgets)
+
+    # widget = widget_from_screen(root,new_screen,"yellow",screen_widgets)
+    # place_screen_widget(widget)
+
     list_of_ssscreens.append(new_screen)
+    print(list_of_ssscreens)
+
+    refresh_grid(root, screens_only=True)
+
     for block in grid_block_widgets:
         grid_state_1(block)
 
@@ -125,6 +139,7 @@ def add_cols(root: Tk, amount: int = 1):
     ss_grid.cols = ss_grid.cols + amount
     delete_widgets(screen_widgets)
     refresh_grid(root)
+    coords.clear()
 
 def register_first_coord(event: Event):
     del coords[0:2]
@@ -144,6 +159,10 @@ def register_second_coord(event: Event):
     coords.append(event.widget.index)
     print(coords)
 
+def clear_screens():
+    delete_widgets(screen_widgets)
+    list_of_ssscreens.clear()
+    print(list_of_ssscreens)
 
 # COLOR PALETTE =====================
 hover_color = "#0000cc"
@@ -215,7 +234,7 @@ def main():
     rem_col_button.grid(row=3)
     add_screen_button = Button(text="Add Screen", command=lambda: add_screen(canvas, coords))
     add_screen_button.grid(row=4)
-    clear_all_button = Button(text="Clear Screens", command=lambda: delete_widgets(screen_widgets))
+    clear_all_button = Button(text="Clear Screens", command=clear_screens)
     clear_all_button.grid(row=6)
     
 
