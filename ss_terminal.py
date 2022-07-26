@@ -1,28 +1,12 @@
 from operator import indexOf
 from ss_classes import Canvas, Margin, Grid, Screen
 import ss_user_input_functions as user
-from ss_generator import render_fusion_output, save_preset
-from pickle import load
-from os import listdir
-from os.path import join
+from ss_generator import render_fusion_output, save_preset, load_defaults
 from time import sleep
 
 
 # Load defaults.
 input('\nWelcome to SplitScreener. Press [ENTER] start.')
-
-def load_defaults(defaults_directory: str) -> tuple[str]:
-    defaults_files = listdir(defaults_directory)
-    defaults_files.sort()
-
-    defaults = []
-    for file in defaults_files:
-        with open(join('defaults',file),'rb') as file:
-            dict = load(file)
-            defaults.append(dict)
-
-    canvas_defaults, grid_defaults, margin_defaults = [default for default in defaults]
-    return (canvas_defaults, grid_defaults, margin_defaults)
 
 canvas_defaults, grid_defaults, margin_defaults = load_defaults('defaults')
 

@@ -2,7 +2,20 @@ import jinja2
 from pyperclip import copy
 from os import listdir
 from os.path import join, isfile
+from pickle import load
 
+def load_defaults(defaults_directory: str) -> tuple[str]:
+    defaults_files = listdir(defaults_directory)
+    defaults_files.sort()
+
+    defaults = []
+    for file in defaults_files:
+        with open(join('defaults',file),'rb') as file:
+            dict = load(file)
+            defaults.append(dict)
+
+    canvas_defaults, grid_defaults, margin_defaults = [default for default in defaults]
+    return (canvas_defaults, grid_defaults, margin_defaults)
 
 def render_fusion_output(screen_values: list[dict[str,int]], resolution: tuple[int] = (1920,1080)) -> str:
     """Gets a list of screen values rendered by SplitScreener
