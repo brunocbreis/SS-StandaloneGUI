@@ -141,7 +141,9 @@ def add_cols(root: Tk, amount: int = 1):
     coords.clear()
 
 def register_first_coord(event: Event):
-    del coords[0:2]
+    global coords
+
+    coords.clear()
     coords.append(event.widget.index)
     event.widget.config(bg = click_color)
 
@@ -149,27 +151,32 @@ def register_first_coord(event: Event):
         grid_state_2(block)
     print(coords)
 
+def should_be_painted(block: Widget, grid:ss.Grid) -> bool:
+    global coords
+
+    block_x, block_y = ss.get_coords(block.index,grid.matrix)
+    coords_1, coords_2 = ss.get_coords(coords[0],grid.matrix), ss.get_coords(coords[1],grid.matrix)
+    coords_x, coords_y = (coords_1[0], coords_2[0]+1), (coords_1[1], coords_2[1]+1)
+    # xspan = abs(coords_x[0] - coords_x[1])+1
+    # yspan = abs(coords_y[0] - coords_y[1])+1
+
+    if block_x in range(*coords_x):
+        if block_y in range(*coords_y):
+            return True
+    return False
+
 def register_second_coord(event: Event):
+    global coords
+    global ss_grid
 
     x,y = event.widget.winfo_pointerxy()
     widget_released_on = event.widget.winfo_containing(x, y)
 
-    # widget_released_on.config(bg = click_color)
-
     coords.append(widget_released_on.index)
 
     for block in grid_block_widgets:
-        block_x, block_y = ss.get_coords(block.index,ss_grid.matrix)
-        coords_1, coords_2 = ss.get_coords(coords[0],ss_grid.matrix), ss.get_coords(coords[1],ss_grid.matrix)
-        coords_x, coords_y = (coords_1[0], coords_2[0]+1), (coords_1[1], coords_2[1]+1)
-        xspan = abs(coords_x[0] - coords_x[1])+1
-        yspan = abs(coords_y[0] - coords_y[1])+1
-
-        if block_x in range(*coords_x):
-            if block_y in range(*coords_y):
-        
-                block.config(bg = click_color)
-
+        if should_be_painted(block, ss_grid):
+            block.config(bg = click_color)
 
     print(coords)
 
@@ -187,6 +194,8 @@ def update_grid(root: Tk, canvas: ss.Canvas, width: int, height: int, scale_labe
 
     canvas_width, canvas_height = update_canvas_dimensions(canvas)
     root.config(width=canvas_width, height=canvas_height)
+    root.grid_forget()
+    root.grid(padx=(770-canvas_width)/2, pady=(620-canvas_height)/2, row = 3, column=2)
 
     scale = canvas_width / canvas.width * 100
     scale_label.config(text=f"Preview scale: {scale: .1f}%")
@@ -201,13 +210,15 @@ def update_grid(root: Tk, canvas: ss.Canvas, width: int, height: int, scale_labe
 def update_canvas_dimensions(canvas: ss.Canvas) -> tuple[int]:
     aspect_ratio = canvas.width/canvas.height
     max_geometry = 750
+    max_height = 600
 
     if aspect_ratio > 1:
         canvas_width = max_geometry
         canvas_height = canvas_width / aspect_ratio
     else:
-        canvas_height = max_geometry
+        canvas_height = max_height
         canvas_width = canvas_height * aspect_ratio
+
     return canvas_width, canvas_height
 
 # WIDGET CREATION FUNCTIONS
@@ -297,7 +308,7 @@ def main():
 
     # the canvas
     canvas = Canvas(root, width = canvas_width, height = canvas_height, bg="#1e1e1e", bd=0, highlightthickness=0, relief='ridge')
-    canvas.grid(padx=20, pady=20, row = 3, column=2)
+    canvas.grid(padx=10, pady=10, row = 3, column=2)
     
     # the render button
     render_button = Button(height=2,font="Archivo 16", text="Render Fusion Output", command=lambda: render_for_fusion(list_of_ssscreens, ss_canvas))
@@ -322,6 +333,7 @@ def main():
 
     clear_all_button = Button(button_frame_right, text="Clear Screens", command=clear_screens)
     clear_all_button.grid(row=4, column = 2,pady=10)
+    
     
 
     # CANVAS SETTINGS
