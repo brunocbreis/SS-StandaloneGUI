@@ -1,0 +1,17 @@
+{
+    "canvas": {
+        "width":    1920, 
+        "height":   1080
+    }, 
+    "margin": {
+        "top":      15, 
+        "left":     15, 
+        "bottom":   15, 
+        "right":    15
+    }, 
+    "grid": {
+        "cols":     12,
+        "rows":     6,
+        "gutter":   15
+    }
+ }

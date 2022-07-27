@@ -1,12 +1,13 @@
 from jinja2 import Template
 import pickle
+import json
 import os
 
-def add_inputs(**kwargs) -> str:
+def add_inputs(**inputs: dict[str,str|int]) -> str:
     """Creates strings for adding inputs to Fusion tools"""
 
     result = ""
-    for key, value in kwargs.items():
+    for key, value in inputs.items():
         result += f"{key} = Input {{ Value = {value}, }},\n\t\t\t\t"  
     return result
 
@@ -55,7 +56,7 @@ def create_screen(last_tool_name: str, resolution: tuple[int,int], index: int = 
     media_in = ""
     media_in_as_input_to_merge = ""
     if not fusion_studio:
-        media_in = add_tool("MediaIn", f"SSScreen{index+1}", (-110, node_y), add_inputs(Layer=index))
+        media_in = add_tool("MediaIn", f"SSScreen{index+1}", (-110, node_y), add_inputs(Layer=f'"{index}"'))
         media_in_as_input_to_merge = add_source_inputs("Foreground", f"SSScreen{index+1}", "Output")
 
 
@@ -104,10 +105,8 @@ def render_fusion_output(screen_values: list[dict[str,int]], resolution: tuple[i
     return fusion_output
 
 
-
 # defaults and presets
-
-def load_defaults(defaults_directory: str) -> tuple[str]:
+def load_defaults_pickle(defaults_directory: str) -> tuple[dict,str,int]:
      defaults_files = os.listdir(defaults_directory)
      defaults_files.sort()
 
@@ -120,9 +119,17 @@ def load_defaults(defaults_directory: str) -> tuple[str]:
      canvas_defaults, grid_defaults, margin_defaults = [default for default in defaults]
      return (canvas_defaults, grid_defaults, margin_defaults)
 
+def load_defaults(defaults_file: str | os.PathLike) -> dict[dict[str,int]]:
+    try:
+        with open(defaults_file, 'r') as _:
+            defaults = json.load(_)
+        return defaults
+    except FileNotFoundError:
+        print("Defaults file not found.")
+        return
 
 def save_preset_for_fusion(
-        presets_directory: str, 
+        presets_directory: str | os.PathLike, 
         fusion_output: str, 
         preset_name: str = "SplitScreenerPreset") -> None:
 
@@ -137,7 +144,19 @@ def save_preset_for_fusion(
     with open(os.path.join(presets_directory,preset_file_name), 'w') as new_preset_file:
         new_preset_file.write(fusion_output)
 
+def save_preset_for_splitscreener(
+        presets_directory: str | os.PathLike,
+        splitscreener_values: dict[dict[str,int]],
+        preset_name: str = ""
+        ) -> None:
+    
+    if not preset_name:
+        if 'screens' in splitscreener_values:
+            screen_amt = splitscreener_values['screens']
+            preset_name += f"_{len(screen_amt)}Screen{'s' if screen_amt > 1 else ''}"
+    ...
 
+    
 # testing area
 def test():
     bg = add_tool("Background", "Background1", (0,33), add_inputs(Width = 1920, Height = 1080, TopLeftRed = 1))

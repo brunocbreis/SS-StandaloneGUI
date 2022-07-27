@@ -1,4 +1,4 @@
-from operator import indexOf
+import pyperclip
 from ss_classes import Canvas, Margin, Grid, Screen
 import ss_user_input_functions as user
 from fusion_tool_generator import render_fusion_output, save_preset_for_fusion, load_defaults
@@ -8,18 +8,18 @@ from time import sleep
 # Load defaults.
 input('\nWelcome to SplitScreener. Press [ENTER] start.')
 
-canvas_defaults, grid_defaults, margin_defaults = load_defaults('defaults')
-
+defaults = load_defaults('defaults/defaults.json')
+print(defaults)
 
 # Setting up the Canvas and the Grid.
 canvas = Canvas()
-canvas.width, canvas.height = [canvas_defaults[key] for key in [*canvas_defaults]]
+canvas.width, canvas.height = [defaults['canvas'][key] for key in [*defaults['canvas']]]
 
 margin = Margin(canvas)
-margin.top, margin.left, margin.bottom, margin.right = [margin_defaults[key] for key in [*margin_defaults]]
+margin.top, margin.left, margin.bottom, margin.right = [defaults['margin'][key] for key in [*defaults['margin']]]
 
 grid = Grid(canvas, margin)
-grid.cols, grid.rows, grid.gutter = [grid_defaults[key] for key in [*grid_defaults]]
+grid.cols, grid.rows, grid.gutter = [defaults['grid'][key] for key in [*defaults['grid']]]
 
 print("\n\nDEFAULT SETTINGS\n")
 print(canvas,margin,grid, sep='\n')
@@ -93,7 +93,7 @@ sleep(1)
 input("Done! Press [ENTER] to render Fusion output.")
 
 fusion_output = render_fusion_output(screen_values, canvas.resolution)
-
+pyperclip.copy(fusion_output)
 
 # Users save presets
 want_to_save = input("Choose a name for your new preset. Or press [ENTER] to leave without saving.\n> ")
