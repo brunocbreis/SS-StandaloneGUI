@@ -10,7 +10,6 @@ list_of_ssscreens = []
 coords = [1,1]
 
 
-
 # SPLIT SCREENER VARS ========================
 ss_canvas = ss.Canvas()
 ss_canvas.width = 1920
@@ -22,6 +21,7 @@ ss_grid = ss.Grid(ss_canvas,ss_margin)
 ss_margin.top, ss_margin.left, ss_margin.bottom, ss_margin.right, ss_grid.gutter = 25,25,25,25,25
 ss_grid.cols = 12
 ss_grid.rows = 6
+
 
 # RENDERING FUNCTIONS ========================
 # Computer generates graphics.
@@ -185,7 +185,7 @@ def update_canvas_dimensions(canvas: ss.Canvas) -> tuple[int]:
     return canvas_width, canvas_height
 
 # WIDGET CREATION FUNCTIONS
-def generate_entry(root: Frame, name: str, rownumber: int, colnumber: int, default_value: int, save_at: dict[str,tuple[Widget]]) -> None:
+def mk_entry(root: Frame, name: str, rownumber: int, colnumber: int, default_value: int, save_at: dict[str,tuple[Widget]]) -> None:
         label = Label(root, text=f"{name}:", justify='left', padx=20,font="Archivo")
         label.grid(row=rownumber, column=colnumber, sticky=W)
 
@@ -292,82 +292,117 @@ def register_2nd_coord_and_add_screen(event: Event):
 
 
 
-# GOT RID OF MAIN FUNCTION
-
 def main():
     root = Tk()
 
-    # TK VARIABLES
+    # TK VARS
     fusion_studio = IntVar()
+    
+
+    # REGULAR VARS
+    canvas_width, canvas_height = update_canvas_dimensions(ss_canvas)
+
+    scale_text_value = DoubleVar()
+    scale_text_value.set(canvas_width / ss_canvas.width * 100) # Broke, doesn't update automatically any more
+
+    scale_text = StringVar()
+    scale_text.set(f"Preview scale: {scale_text_value.get(): .1f}%")
 
 
-    # SETTING UP THE MAIN WINDOW ======================
-    # x = 1200
-    # y = 800
-    # dim = {
-    #     "x": x,
-    #     "y": y,
-    #     "screenx": root.winfo_screenwidth(),
-    #     "screeny": root.winfo_screenheight(),
-    #     "screenx_center": int(root.winfo_screenwidth()/2),
-    #     "screeny_center": int(root.winfo_screenheight()/2),
-    # }
-
-    #Root Window
+    #Root Window Settings
     root.title('SplitScreener')
-    # root.geometry(f"{dim['x']}x{dim['y']}+{dim['screenx_center'] - int(dim['x']/2)}+{dim['screeny_center'] - int(dim['y']/2)}") # starts the window in the center of the screen
     root.resizable(False,False)
-    # root.minsize(1200,800)
 
 
     # SETTING UP THE MAIN TK GRID
-    root.columnconfigure(index=1, weight=1, minsize=200) # LEFT SIDEBAR
-    root.columnconfigure(index=2, weight=1, minsize=800) # MAIN SECTION, THE CREATOR
-    root.columnconfigure(index=3, weight=1, minsize=200) # RIGHT SIDEBAR (nothing there yet)
-    root.rowconfigure(index=1,weight=3) # HEADER
-    root.rowconfigure(index=2,weight=1) # MAIN SECTION, THE CREATOR FRAME AND SETTINGS
-    root.rowconfigure(index=3,weight=1) # THE RENDER BUTTON FRAME
-    root.rowconfigure(index=4,weight=3) # FOOTER
+    root.columnconfigure(index=1,   weight=1, minsize=200)  # LEFT SIDEBAR
+    root.columnconfigure(index=2,   weight=1, minsize=800)  # MAIN SECTION, THE CREATOR
+    root.columnconfigure(index=3,   weight=1, minsize=200)  # RIGHT SIDEBAR (nothing there yet)
+    root.rowconfigure(   index=1,   weight=3)               # HEADER
+    root.rowconfigure(   index=2,   weight=1)               # MAIN SECTION, THE CREATOR FRAME AND SETTINGS
+    root.rowconfigure(   index=3,   weight=1)               # THE RENDER BUTTON FRAME
+    root.rowconfigure(   index=4,   weight=3)               # FOOTER
 
 
-    creator_frame = Frame(root)
-    creator_frame.grid(padx=10, pady=10, row = 2, column=2)
+    # CREATING THE FRAMES
+    header =                Frame(root)
+    button_frame_left =     Frame(root)
+    creator_frame =         Frame(root)
+    button_frame_right =    Frame(root) # useless atm
+    render_bttn_frame =     Frame(root)
+    footer =                Frame(root)
 
-    canvas_width, canvas_height = update_canvas_dimensions(ss_canvas)
+    # adding them to the grid
+    header.grid(            column=1,   row=1,  columnspan=3)
+    button_frame_left.grid( column=1,   row=2)
+    creator_frame.grid(     column=2,   row=2,  padx=10, pady=10)
+    button_frame_right.grid(column=3,   row=2)
+    render_bttn_frame.grid( column=2,   row=3)
+    footer.grid(            column=1,   row=4,  columnspan=3)
 
 
+    # APP TITLE
+    app_title = Label(header, height=1, text="Split Screener", font="Archivo 24 bold", justify=CENTER)
 
-    # spacer on top
-    Label(root,height=1, text="Split Screener", font="Archivo 24 bold", justify=CENTER).grid(row=1,column=2, sticky=S, pady=20)
+    app_title.pack(anchor=S, pady=20)
 
 
+    # CREATOR FRAME WIDGETS
     # scale label
-    scale_text = canvas_width / ss_canvas.width * 100
-    preview_scale_lbl = Label(creator_frame,text=f"Preview scale: {scale_text: .1f}%", justify=LEFT, pady=0, padx = 20,font="Archivo 12")
-    preview_scale_lbl.grid(column=1,row=2,sticky=NE,pady=10)
+    preview_scale_lbl = Label(
+        creator_frame,
+        textvariable=scale_text, 
+        justify=LEFT, 
+        pady=0, padx = 20,
+        font="Archivo 12"
+        )
 
     # the canvas
-    canvas = Canvas(creator_frame, width = canvas_width, height = canvas_height, bg=background_color, bd=0, highlightthickness=0, relief='ridge', cursor="fleur")
+    canvas = Canvas(
+        creator_frame, 
+        width = canvas_width, height=canvas_height, 
+        bg=background_color, bd=0, highlightthickness=0,
+        relief='ridge', cursor="cross"
+        )
+
+    # gridding...   
+    preview_scale_lbl.grid(column=1,row=2,sticky=NE,pady=10)
     canvas.grid(row=1, column=1, sticky=N)
 
-    render_bttn_frame = Frame(root)
-    render_bttn_frame.grid(row=3,column=2)
-
+    
+    # RENDER BUTTON FRAME WIDGETS
     # the render button
-    render_button = Button(render_bttn_frame,height=2,font="Archivo 16", text="Render Fusion Output", command=lambda: render_for_fusion(list_of_ssscreens, ss_canvas,fusion_studio, status_bar_text))
-    render_button.grid(column=1, row=   1, sticky=N)
+    render_button = Button(
+        render_bttn_frame,
+        height=2,font="Archivo 16", 
+        text="Render Fusion Output", 
+        command=lambda: render_for_fusion(
+            list_of_ssscreens, 
+            ss_canvas,
+            fusion_studio, 
+            status_bar_text
+            )
+        )
 
     # fusion studio checkbox
-    fu_studio_checkbox = Checkbutton(render_bttn_frame,text="Fusion Studio (no MediaIns or Outs)", justify=LEFT,variable=fusion_studio, font="Archivo 10", pady=10)
+    fu_studio_checkbox = Checkbutton(
+        render_bttn_frame,
+        text="Fusion Studio (no MediaIns or Outs)", 
+        justify=LEFT,
+        variable=fusion_studio, 
+        font="Archivo 10", 
+        pady=10
+        )
+
+    # gridding...
+    render_button.grid(     column=1, row=1, sticky=N)
     fu_studio_checkbox.grid(column=1, row=2, sticky=N)
 
 
-    # create footer
-    footer = Frame(root)
-    footer.grid(column=1,columnspan=3,row=4)
-
+    # FOOTER FRAME WIDGET
     status_bar_text = StringVar()
     status_bar = Label(footer, textvariable=status_bar_text)
+
     status_bar.pack(pady=25)
 
 
@@ -380,40 +415,29 @@ def main():
 
 
     # ADDING SOME BUTTONS ======================
-    button_frame_left = Frame(bd=0, highlightthickness=0, relief='ridge')
-    button_frame_left.grid(column=1, row =2)
-
-    button_frame_right = Frame(bd=0, highlightthickness=0, relief='ridge')
-    button_frame_right.grid(column=3, row =2)
-
-
-    # add_screen_button = Button(button_frame_right, text="Add Screen", command=lambda: add_screen(canvas, coords))
-    # add_screen_button.grid(row=3, column = 2,pady=10)
-
     clear_all_button = Button(button_frame_left, text="Clear Screens", command=lambda:clear_screens(status_bar_text))
     clear_all_button.grid(row=14, column = 1,pady=10, columnspan=2)
 
 
-
     # CANVAS SETTINGS
     canvas_entries = {}
-    generate_entry(button_frame_left, "Width",  1, 1, ss_canvas.width,     canvas_entries)
-    generate_entry(button_frame_left, "Height", 2, 1, ss_canvas.height,    canvas_entries)
+    mk_entry(button_frame_left, "Width",  1, 1, ss_canvas.width,     canvas_entries)
+    mk_entry(button_frame_left, "Height", 2, 1, ss_canvas.height,    canvas_entries)
     Label(button_frame_left, height=1).grid(row=3, column=1)
 
     # MARGIN SETTINGS 4,5,6,7,8
     margin_entries = {}
-    generate_entry(button_frame_left, "Top",     4, 1, ss_margin._top_px,       margin_entries)
-    generate_entry(button_frame_left, "Left",    5, 1, ss_margin._left_px,      margin_entries)
-    generate_entry(button_frame_left, "Bottom",  6, 1, ss_margin._bottom_px,    margin_entries)
-    generate_entry(button_frame_left, "Right",   7, 1, ss_margin._right_px,     margin_entries)
+    mk_entry(button_frame_left, "Top",     4, 1, ss_margin._top_px,       margin_entries)
+    mk_entry(button_frame_left, "Left",    5, 1, ss_margin._left_px,      margin_entries)
+    mk_entry(button_frame_left, "Bottom",  6, 1, ss_margin._bottom_px,    margin_entries)
+    mk_entry(button_frame_left, "Right",   7, 1, ss_margin._right_px,     margin_entries)
     Label(button_frame_left, height=1).grid(row= 8, column=1)
 
     # GRID SETTINGS 9,10,11,12,13==================
     grid_entries = {}
-    generate_entry(button_frame_left, "Cols",    9, 1, ss_grid.cols,       grid_entries)
-    generate_entry(button_frame_left, "Rows",   10, 1, ss_grid.rows,       grid_entries)
-    generate_entry(button_frame_left, "Gutter", 11, 1, ss_grid._gutter_px, grid_entries)
+    mk_entry(button_frame_left, "Cols",    9, 1, ss_grid.cols,       grid_entries)
+    mk_entry(button_frame_left, "Rows",   10, 1, ss_grid.rows,       grid_entries)
+    mk_entry(button_frame_left, "Gutter", 11, 1, ss_grid._gutter_px, grid_entries)
     Label(button_frame_left, height=1).grid(row=12, column=1)
 
     update_grid_button = Button(
