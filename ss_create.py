@@ -1,6 +1,5 @@
 import pyperclip
 from ss_classes import Canvas, Margin, Grid, Screen
-from ss_generator import render_fusion_output, save_preset
 import fusion_tool_generator as fu
 
 def main():
@@ -45,7 +44,7 @@ def main():
     want_to_save = input("Choose a name for your new preset. Or press ENTER to leave without saving.\n")
 
     if want_to_save:
-        save_preset('presets',fusion_output,want_to_save)
+        fu.save_preset_for_fusion('presets',fusion_output,want_to_save)
         
 if __name__ == "__main__":
     main()
