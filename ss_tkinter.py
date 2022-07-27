@@ -32,6 +32,115 @@ screen_color = "#CFD7C7"
 background_color = "#0B2027"
 
 
+# # RECT TRACKER
+
+# def groups(glist, numPerGroup=2):
+# 	result = []
+
+# 	i = 0
+# 	cur = []
+# 	for item in glist:
+# 		if not i < numPerGroup:
+# 			result.append(cur)
+# 			cur = []
+# 			i = 0
+
+# 		cur.append(item)
+# 		i += 1
+
+# 	if cur:
+# 		result.append(cur)
+
+# 	return result
+
+# def average(points):
+# 	aver = [0,0]
+	
+# 	for point in points:
+# 		aver[0] += point[0]
+# 		aver[1] += point[1]
+		
+# 	return aver[0]/len(points), aver[1]/len(points)
+
+# class RectTracker:
+	
+# 	def __init__(self, canvas):
+# 		self.canvas = canvas
+# 		self.item = None
+		
+# 	def draw(self, start, end, **opts):
+# 		"""Draw the rectangle"""
+# 		return self.canvas.create_rectangle(*(list(start)+list(end)), **opts)
+		
+# 	def autodraw(self, **opts):
+# 		"""Setup automatic drawing; supports command option"""
+# 		self.start = None
+# 		self.canvas.bind("<Button-1>", self.__update, '+')
+# 		self.canvas.bind("<B1-Motion>", self.__update, '+')
+# 		self.canvas.bind("<ButtonRelease-1>", self.__stop, '+')
+		
+# 		self._command = opts.pop('command', lambda *args: None)
+# 		self.rectopts = opts
+		
+# 	def __update(self, event):
+# 		if not self.start:
+# 			self.start = [event.x, event.y]
+# 			return
+		
+# 		if self.item is not None:
+# 			self.canvas.delete(self.item)
+# 		self.item = self.draw(self.start, (event.x, event.y), **self.rectopts)
+# 		self._command(self.start, (event.x, event.y))
+		
+# 	def __stop(self, event):
+# 		self.start = None
+# 		self.canvas.delete(self.item)
+# 		self.item = None
+		
+# 	def hit_test(self, start, end, tags=None, ignoretags=None, ignore=[]):
+# 		"""
+# 		Check to see if there are items between the start and end
+# 		"""
+# 		ignore = set(ignore)
+# 		ignore.update([self.item])
+		
+# 		# first filter all of the items in the canvas
+# 		if isinstance(tags, str):
+# 			tags = [tags]
+		
+# 		if tags:
+# 			tocheck = []
+# 			for tag in tags:
+# 				tocheck.extend(self.canvas.find_withtag(tag))
+# 		else:
+# 			tocheck = self.canvas.find_all()
+# 		tocheck = [x for x in tocheck if x != self.item]
+# 		if ignoretags:
+# 			if not hasattr(ignoretags, '__iter__'):
+# 				ignoretags = [ignoretags]
+# 			tocheck = [x for x in tocheck if x not in self.canvas.find_withtag(it) for it in ignoretags]
+		
+# 		self.items = tocheck
+		
+# 		# then figure out the box
+# 		xlow = min(start[0], end[0])
+# 		xhigh = max(start[0], end[0])
+		
+# 		ylow = min(start[1], end[1])
+# 		yhigh = max(start[1], end[1])
+		
+# 		items = []
+# 		for item in tocheck:
+# 			if item not in ignore:
+# 				x, y = average(groups(self.canvas.coords(item)))
+# 				if (xlow < x < xhigh) and (ylow < y < yhigh):
+# 					items.append(item)
+	
+# 		return items
+
+
+
+
 # RENDERING FUNCTIONS ========================
 def delete_widgets(list_of_widgets: list[Widget]):
     for widget in list_of_widgets:
@@ -53,12 +162,12 @@ def place_screen_widget(widget: Widget) -> None:
     """Renders one label widget from a ss.Screen object and appends it to a group."""
     screen = widget.screen
 
-    relx = screen.x - screen.width/2
-    rely = 1 - (screen.y + screen.height/2)
+    relx = screen.x
+    rely = 1 - screen.y
     relw = screen.width
     relh = screen.height
 
-    widget.place(relwidth=relw,relheight=relh, anchor=NW, relx=relx, rely=rely, bordermode='outside')
+    widget.place(relwidth=relw,relheight=relh, anchor=CENTER, relx=relx, rely=rely, bordermode='outside')
     
 def create_grid_blocks() -> list[list[ss.Screen]]:
     """
@@ -102,8 +211,7 @@ def refresh_grid(root: Tk, screens_only: bool = False):
                 widget = widget_from_screen(root,block,original_color,grid_block_widgets)
                 
                 widget.index = block_x + 1 + block_y * ncols
-                # widget.index = (nrows - block_y)  + block_x + (nrows-block_y-1)*(ncols-1) # fixed display, adds mirrored screen
-                widget.config(text = widget.index)
+                # widget.config(text = widget.index)
                 grid_blocks_default_state(widget)
 
         
@@ -345,7 +453,7 @@ def main():
 
 
     # APP TITLE
-    app_title = Label(header, height=1, text="Split Screener", font="Archivo 24 bold", justify=CENTER)
+    app_title = Label(header, height=1, text="SplitScreener", font="Archivo 24 bold", justify=CENTER)
 
     app_title.pack(anchor=S, pady=20)
 
@@ -367,6 +475,21 @@ def main():
         bg=background_color, bd=0, highlightthickness=0,
         relief='ridge', cursor="cross"
         )
+
+    
+
+    # tracker = RectTracker(canvas)
+
+    # def onDrag(start, end):
+    #     global x,y
+    #     items = tracker.hit_test(start, end)
+    #     for x in tracker.items:
+    #         if x not in items:
+    #             canvas.itemconfig(x, fill='grey')
+    #         else:
+    #             canvas.itemconfig(x, fill='blue')
+	
+    # tracker.autodraw(fill="", width=2, command=onDrag)
 
     # gridding...   
     preview_scale_lbl.grid(column=1,row=2,sticky=NE,pady=10)
@@ -458,7 +581,23 @@ def main():
     # RENDER GRID FOR THE FIRST TIME ====================
     refresh_grid(canvas)
    
-   
+    x, y = None, None
+    def cool_design(event):
+        global x, y
+        kill_xy()
+        
+        dashes = [3, 2]
+        x = canvas.create_line(event.x, 0, event.x, 1000, dash=dashes, tags='no')
+        y = canvas.create_line(0, event.y, 1000, event.y, dash=dashes, tags='no')
+        canvas.tag_raise(x, y)
+        
+    def kill_xy(event=None):
+        canvas.delete('no')
+
+    canvas.bind('<Motion>', cool_design, '+')
+
+
+
     root.mainloop()
 
 

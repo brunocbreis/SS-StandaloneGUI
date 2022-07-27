@@ -6,11 +6,11 @@ def main():
 
     ##### CREATE CANVAS -------------------------------
     canvas = Canvas()
-    canvas.width = 1920
-    canvas.height = 1080
+    canvas.width = 500
+    canvas.height = 500
 
     ##### CREATE MARGINS -----------------------------
-    mg_size = 60
+    mg_size = 15
     margin = Margin(canvas)
     margin.top = margin.bottom = margin.left = margin.right = mg_size
 
@@ -19,7 +19,7 @@ def main():
         canvas = canvas,
         margin = margin
     )
-    grid.gutter = 30
+    grid.gutter = 5
 
     ##### CREATE SCREENS  ---------------------------
     screens = [
@@ -29,22 +29,24 @@ def main():
         Screen(grid,4,3,9,4)
     ]
 
-    ##### RETURN VALUES -------------------------
-    screen_values = []
-    for screen in screens:
-        screen_value = screen.get_values()
-        screen_values.append(screen_value)
+    print(screens[0].x,1-screens[0].y,screens[0].width, screens[0].height)
+
+    # ##### RETURN VALUES -------------------------
+    # screen_values = []
+    # for screen in screens:
+    #     screen_value = screen.get_values()
+    #     screen_values.append(screen_value)
 
 
-    ##### RENDER OUTPUT -----------------------
-    fusion_output = fu.render_fusion_output(screen_values, canvas.resolution, True)
-    pyperclip.copy(fusion_output)
+    # ##### RENDER OUTPUT -----------------------
+    # fusion_output = fu.render_fusion_output(screen_values, canvas.resolution, True)
+    # pyperclip.copy(fusion_output)
 
-    ##### SAVE PRESET ---------------------------
-    want_to_save = input("Choose a name for your new preset. Or press ENTER to leave without saving.\n")
+    # ##### SAVE PRESET ---------------------------
+    # want_to_save = input("Choose a name for your new preset. Or press ENTER to leave without saving.\n")
 
-    if want_to_save:
-        fu.save_preset_for_fusion('presets',fusion_output,want_to_save)
+    # if want_to_save:
+    #     fu.save_preset_for_fusion('presets',fusion_output,want_to_save)
         
 if __name__ == "__main__":
     main()
