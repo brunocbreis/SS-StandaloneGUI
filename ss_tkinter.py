@@ -144,7 +144,8 @@ def add_screen(root: Tk, coords: list[int,int] = coords):
         grid_blocks_default_state(block)
         block.config(bg = original_color)
 
-def clear_screens():
+def clear_screens(announce: StringVar):
+    announce.set("")
     delete_widgets(screen_widgets)
     list_of_ssscreens.clear()
     print(list_of_ssscreens)
@@ -196,8 +197,10 @@ def generate_entry(root: Frame, name: str, rownumber: int, colnumber: int, defau
 
 
 # OUTPUTTING FUNCTIONS
-def render_for_fusion(screens: list[ss.Screen], canvas: ss.Canvas, fusion_studio: IntVar) -> str:
+def render_for_fusion(screens: list[ss.Screen], canvas: ss.Canvas, fusion_studio: IntVar, announce: StringVar) -> str:
     fusion_studio = bool(fusion_studio.get())
+
+    
 
     screen_values = []
     for screen in screens:
@@ -205,6 +208,9 @@ def render_for_fusion(screens: list[ss.Screen], canvas: ss.Canvas, fusion_studio
         screen_values.append(screen_value)
     fusion_output = render_fusion_output(screen_values,canvas.resolution,fusion_studio)
     pyperclip.copy(fusion_output)
+
+    announce.set("Node tree successfully copied to the clipboard.")
+    
     return fusion_output
 
 # COLOR PALETTE =====================
@@ -289,41 +295,43 @@ def register_2nd_coord_and_add_screen(event: Event):
 # GOT RID OF MAIN FUNCTION
 
 def main():
-
     root = Tk()
+
+    # TK VARIABLES
     fusion_studio = IntVar()
 
+
     # SETTING UP THE MAIN WINDOW ======================
-    x = 1200
-    y = 800
-    dim = {
-        "x": x,
-        "y": y,
-        "screenx": root.winfo_screenwidth(),
-        "screeny": root.winfo_screenheight(),
-        "screenx_center": int(root.winfo_screenwidth()/2),
-        "screeny_center": int(root.winfo_screenheight()/2),
-    }
+    # x = 1200
+    # y = 800
+    # dim = {
+    #     "x": x,
+    #     "y": y,
+    #     "screenx": root.winfo_screenwidth(),
+    #     "screeny": root.winfo_screenheight(),
+    #     "screenx_center": int(root.winfo_screenwidth()/2),
+    #     "screeny_center": int(root.winfo_screenheight()/2),
+    # }
 
     #Root Window
     root.title('SplitScreener')
-    root.geometry(f"{dim['x']}x{dim['y']}+{dim['screenx_center'] - int(dim['x']/2)}+{dim['screeny_center'] - int(dim['y']/2)}") # starts the window in the center of the screen
-    # root.resizable(False,False)
-    root.minsize(1200,800)
+    # root.geometry(f"{dim['x']}x{dim['y']}+{dim['screenx_center'] - int(dim['x']/2)}+{dim['screeny_center'] - int(dim['y']/2)}") # starts the window in the center of the screen
+    root.resizable(False,False)
+    # root.minsize(1200,800)
 
 
-    # SETTING UP THE TK GRID
-    root.columnconfigure(index=1, weight=1, minsize=200)
-    root.columnconfigure(index=2, weight=1, minsize=800)
-    root.columnconfigure(index=3, weight=1, minsize=200)
-    root.rowconfigure(index=1,weight=1)
-    root.rowconfigure(index=2,weight=1)
-    root.rowconfigure(index=3,weight=1)
-    root.rowconfigure(index=4,weight=1)
+    # SETTING UP THE MAIN TK GRID
+    root.columnconfigure(index=1, weight=1, minsize=200) # LEFT SIDEBAR
+    root.columnconfigure(index=2, weight=1, minsize=800) # MAIN SECTION, THE CREATOR
+    root.columnconfigure(index=3, weight=1, minsize=200) # RIGHT SIDEBAR (nothing there yet)
+    root.rowconfigure(index=1,weight=3) # HEADER
+    root.rowconfigure(index=2,weight=1) # MAIN SECTION, THE CREATOR FRAME AND SETTINGS
+    root.rowconfigure(index=3,weight=1) # THE RENDER BUTTON FRAME
+    root.rowconfigure(index=4,weight=3) # FOOTER
 
 
-    frame = Frame(root)
-    frame.grid(padx=10, pady=10, row = 2, column=2)
+    creator_frame = Frame(root)
+    creator_frame.grid(padx=10, pady=10, row = 2, column=2)
 
     canvas_width, canvas_height = update_canvas_dimensions(ss_canvas)
 
@@ -335,23 +343,35 @@ def main():
 
     # scale label
     scale_text = canvas_width / ss_canvas.width * 100
-    preview_scale_lbl = Label(frame,text=f"Preview scale: {scale_text: .1f}%", justify=LEFT, pady=0, padx = 20,font="Archivo 12")
-    preview_scale_lbl.grid(column=1,row=1,sticky=NE,pady=10)
+    preview_scale_lbl = Label(creator_frame,text=f"Preview scale: {scale_text: .1f}%", justify=LEFT, pady=0, padx = 20,font="Archivo 12")
+    preview_scale_lbl.grid(column=1,row=2,sticky=NE,pady=10)
 
     # the canvas
-    canvas = Canvas(frame, width = canvas_width, height = canvas_height, bg=background_color, bd=0, highlightthickness=0, relief='ridge', cursor="fleur")
-    canvas.grid(row = 2, column=1, sticky=N)
+    canvas = Canvas(creator_frame, width = canvas_width, height = canvas_height, bg=background_color, bd=0, highlightthickness=0, relief='ridge', cursor="fleur")
+    canvas.grid(row=1, column=1, sticky=N)
 
     render_bttn_frame = Frame(root)
     render_bttn_frame.grid(row=3,column=2)
 
     # the render button
-    render_button = Button(render_bttn_frame,height=2,font="Archivo 16", text="Render Fusion Output", command=lambda: render_for_fusion(list_of_ssscreens, ss_canvas,fusion_studio))
+    render_button = Button(render_bttn_frame,height=2,font="Archivo 16", text="Render Fusion Output", command=lambda: render_for_fusion(list_of_ssscreens, ss_canvas,fusion_studio, status_bar_text))
     render_button.grid(column=1, row=   1, sticky=N)
 
     # fusion studio checkbox
     fu_studio_checkbox = Checkbutton(render_bttn_frame,text="Fusion Studio (no MediaIns or Outs)", justify=LEFT,variable=fusion_studio, font="Archivo 10", pady=10)
     fu_studio_checkbox.grid(column=1, row=2, sticky=N)
+
+
+    # create footer
+    footer = Frame(root)
+    footer.grid(column=1,columnspan=3,row=4)
+
+    status_bar_text = StringVar()
+    status_bar = Label(footer, textvariable=status_bar_text)
+    status_bar.pack(pady=25)
+
+
+
 
 
     # RENDER GRID FOR THE FIRST TIME ====================
@@ -370,7 +390,7 @@ def main():
     # add_screen_button = Button(button_frame_right, text="Add Screen", command=lambda: add_screen(canvas, coords))
     # add_screen_button.grid(row=3, column = 2,pady=10)
 
-    clear_all_button = Button(button_frame_left, text="Clear Screens", command=clear_screens)
+    clear_all_button = Button(button_frame_left, text="Clear Screens", command=lambda:clear_screens(status_bar_text))
     clear_all_button.grid(row=14, column = 1,pady=10, columnspan=2)
 
 
