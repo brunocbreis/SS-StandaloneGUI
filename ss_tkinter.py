@@ -3,6 +3,7 @@ import ss_classes as ss
 from tkinter import *
 from fusion_tool_generator import render_fusion_output
 
+
 # GLOBAL VARIABLES AND LISTS ========================
 grid_block_widgets = []
 screen_widgets = []
@@ -10,7 +11,7 @@ list_of_ssscreens = []
 coords = [1,1]
 
 
-# SPLIT SCREENER VARS ========================
+# INITIALIZE SPLIT SCREENER OBJECTS ========================
 ss_canvas = ss.Canvas()
 ss_canvas.width = 1920
 ss_canvas.height = 1080
@@ -23,8 +24,15 @@ ss_grid.cols = 12
 ss_grid.rows = 6
 
 
+# COLOR PALETTE =====================
+hover_color = "#2C5360"
+original_color = "#40798C"
+click_color = "#70A9A1"
+screen_color = "#CFD7C7"
+background_color = "#0B2027"
+
+
 # RENDERING FUNCTIONS ========================
-# Computer generates graphics.
 def delete_widgets(list_of_widgets: list[Widget]):
     for widget in list_of_widgets:
         widget.place_forget()
@@ -118,9 +126,7 @@ def refresh_grid(root: Tk, screens_only: bool = False):
             place_screen_widget(screen_widget)
 
 
-
-# USER INTERACTION FUNCTIONS
-# User sets parameters that change what is to be rendered.
+# USER INTERACTION FUNCTIONS    ==================================
 def add_screen(root: Tk, coords: list[int,int] = coords):
     """Creates a ss.Screen object and appends it to a group. Calls the render_screen function"""
     print("Adding screen...")
@@ -184,7 +190,8 @@ def update_canvas_dimensions(canvas: ss.Canvas) -> tuple[int]:
 
     return canvas_width, canvas_height
 
-# WIDGET CREATION FUNCTIONS
+
+# INTERFACE WIDGET CREATION FUNCTIONS
 def mk_entry(root: Frame, name: str, rownumber: int, colnumber: int, default_value: int, save_at: dict[str,tuple[Widget]]) -> None:
         label = Label(root, text=f"{name}:", justify='left', padx=20,font="Archivo")
         label.grid(row=rownumber, column=colnumber, sticky=W)
@@ -196,7 +203,7 @@ def mk_entry(root: Frame, name: str, rownumber: int, colnumber: int, default_val
         save_at[name] = (label,entry)
 
 
-# OUTPUTTING FUNCTIONS
+# OUTPUTTING FUNCTIONS  ==================================
 def render_for_fusion(screens: list[ss.Screen], canvas: ss.Canvas, fusion_studio: IntVar, announce: StringVar) -> str:
     fusion_studio = bool(fusion_studio.get())
 
@@ -213,14 +220,11 @@ def render_for_fusion(screens: list[ss.Screen], canvas: ss.Canvas, fusion_studio
     
     return fusion_output
 
-# COLOR PALETTE =====================
-hover_color = "#2C5360"
-original_color = "#40798C"
-click_color = "#70A9A1"
-screen_color = "#CFD7C7"
-background_color = "#0B2027"
+def save_preset():
+    ...
 
-# STATE OF BUTTONS ===========
+
+# STATE OF BUTTONS      ==================================
 def grid_blocks_default_state(widget: Widget):
     widget.bind("<Enter>", become_hover_color)
     widget.bind("<Leave>", become_regular_color)
@@ -233,8 +237,7 @@ def grid_blocks_selected_state(widget: Widget):
     widget.bind("<ButtonRelease-1>", register_2nd_coord_and_add_screen)
 
 
-# EVENT HANDLING FUNCS
-
+# EVENT HANDLING FUNCS  ==================================
 def become_hover_color(event: Event):
     widget = event.widget
     widget.configure(bg = hover_color)
@@ -259,7 +262,6 @@ def register_first_coord(event: Event):
         grid_blocks_selected_state(block)
     print(coords)
 
-
 def should_be_painted(block: Widget, grid:ss.Grid) -> bool:
     global coords
 
@@ -271,7 +273,6 @@ def should_be_painted(block: Widget, grid:ss.Grid) -> bool:
         if block_y in range(*coords_y):
             return True
     return False
-
 
 def register_2nd_coord_and_add_screen(event: Event):
     global coords
@@ -292,6 +293,8 @@ def register_2nd_coord_and_add_screen(event: Event):
 
 
 
+
+# ACTUAL APP    ==================================
 def main():
     root = Tk()
 
@@ -406,16 +409,11 @@ def main():
     status_bar.pack(pady=25)
 
 
-
-
-
-    # RENDER GRID FOR THE FIRST TIME ====================
-    refresh_grid(canvas)
-
-
-
     # ADDING SOME BUTTONS ======================
-    clear_all_button = Button(button_frame_left, text="Clear Screens", command=lambda:clear_screens(status_bar_text))
+    clear_all_button = Button(
+        button_frame_left, text="Clear Screens",
+        command=lambda:clear_screens(status_bar_text)
+    )
     clear_all_button.grid(row=14, column = 1,pady=10, columnspan=2)
 
 
@@ -425,6 +423,7 @@ def main():
     mk_entry(button_frame_left, "Height", 2, 1, ss_canvas.height,    canvas_entries)
     Label(button_frame_left, height=1).grid(row=3, column=1)
 
+
     # MARGIN SETTINGS 4,5,6,7,8
     margin_entries = {}
     mk_entry(button_frame_left, "Top",     4, 1, ss_margin._top_px,       margin_entries)
@@ -432,6 +431,7 @@ def main():
     mk_entry(button_frame_left, "Bottom",  6, 1, ss_margin._bottom_px,    margin_entries)
     mk_entry(button_frame_left, "Right",   7, 1, ss_margin._right_px,     margin_entries)
     Label(button_frame_left, height=1).grid(row= 8, column=1)
+
 
     # GRID SETTINGS 9,10,11,12,13==================
     grid_entries = {}
@@ -441,18 +441,24 @@ def main():
     Label(button_frame_left, height=1).grid(row=12, column=1)
 
     update_grid_button = Button(
-        button_frame_left, text="Update Grid", command=lambda: update_grid(canvas, ss_canvas,
-            int(canvas_entries['Width'][1].get()), int(canvas_entries['Height'][1].get()), preview_scale_lbl,
-            ss_margin, int(margin_entries['Top'][1].get()), int(margin_entries['Left'][1].get()), int(margin_entries['Bottom'][1].get()), int(margin_entries['Right'][1].get()),
-            ss_grid, int(grid_entries['Cols'][1].get()), int(grid_entries['Rows'][1].get()), int(grid_entries['Gutter'][1].get())
+        button_frame_left, text="Update Grid", command=lambda: update_grid(
+            canvas, ss_canvas, int(canvas_entries['Width'][1].get()), 
+            int(canvas_entries['Height'][1].get()), preview_scale_lbl,
+
+            ss_margin, int(margin_entries['Top'][1].get()), int(margin_entries['Left'][1].get()), 
+            int(margin_entries['Bottom'][1].get()), int(margin_entries['Right'][1].get()),
+
+            ss_grid, int(grid_entries['Cols'][1].get()), int(grid_entries['Rows'][1].get()), 
+            int(grid_entries['Gutter'][1].get())
             )
     )
     update_grid_button.grid(row=13, column=1, columnspan=2)
 
 
-
-
-
+    # RENDER GRID FOR THE FIRST TIME ====================
+    refresh_grid(canvas)
+   
+   
     root.mainloop()
 
 
