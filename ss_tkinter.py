@@ -19,7 +19,7 @@ ss_canvas.height = 1080
 ss_margin = ss.Margin(ss_canvas)
 ss_grid = ss.Grid(ss_canvas,ss_margin)
 
-ss_margin.top, ss_margin.left, ss_margin.bottom, ss_margin.right, ss_grid.gutter = 40,40,40,40,40
+ss_margin.top, ss_margin.left, ss_margin.bottom, ss_margin.right, ss_grid.gutter = 25,25,25,25,25
 ss_grid.cols = 12
 ss_grid.rows = 6
 
@@ -86,7 +86,7 @@ def refresh_grid(root: Tk, screens_only: bool = False):
         for block_y in range(len(grid_blocks)):
             row = grid_blocks[block_y]
 
-            nrows = len(grid_blocks)
+            # nrows = len(grid_blocks)
             ncols = len(row)
 
             for block_x in range(len(row)):
@@ -96,7 +96,7 @@ def refresh_grid(root: Tk, screens_only: bool = False):
                 widget.index = block_x + 1 + block_y * ncols
                 # widget.index = (nrows - block_y)  + block_x + (nrows-block_y-1)*(ncols-1) # fixed display, adds mirrored screen
                 widget.config(text = widget.index)
-                grid_state_1(widget)
+                grid_blocks_default_state(widget)
 
         
         # PLACING widgets
@@ -124,6 +124,7 @@ def refresh_grid(root: Tk, screens_only: bool = False):
 def add_screen(root: Tk, coords: list[int,int] = coords):
     """Creates a ss.Screen object and appends it to a group. Calls the render_screen function"""
     print("Adding screen...")
+
     try:
         new_screen = ss.Screen.create_from_coords(ss_grid, *coords)  #int(screen_size_entry.get())
     except:
@@ -140,54 +141,8 @@ def add_screen(root: Tk, coords: list[int,int] = coords):
     refresh_grid(root, screens_only=True)
 
     for block in grid_block_widgets:
-        grid_state_1(block)
+        grid_blocks_default_state(block)
         block.config(bg = original_color)
-
-def add_cols(root: Tk, amount: int = 1):
-    ss_grid.cols = ss_grid.cols + amount
-    delete_widgets(screen_widgets)
-    refresh_grid(root)
-    coords.clear()
-
-def register_first_coord(event: Event):
-    global coords
-
-    coords.clear()
-    coords.append(event.widget.index)
-    event.widget.config(bg = click_color)
-
-    for block in grid_block_widgets:
-        grid_state_2(block)
-    print(coords)
-
-def should_be_painted(block: Widget, grid:ss.Grid) -> bool:
-    global coords
-
-    block_x, block_y = ss.get_coords(block.index,grid.matrix)
-    coords_1, coords_2 = ss.get_coords(coords[0],grid.matrix), ss.get_coords(coords[1],grid.matrix)
-    coords_x, coords_y = (coords_1[0], coords_2[0]+1), (coords_1[1], coords_2[1]+1)
-    # xspan = abs(coords_x[0] - coords_x[1])+1
-    # yspan = abs(coords_y[0] - coords_y[1])+1
-
-    if block_x in range(*coords_x):
-        if block_y in range(*coords_y):
-            return True
-    return False
-
-def register_second_coord(event: Event):
-    global coords
-    global ss_grid
-
-    x,y = event.widget.winfo_pointerxy()
-    widget_released_on = event.widget.winfo_containing(x, y)
-
-    coords.append(widget_released_on.index)
-
-    for block in grid_block_widgets:
-        if should_be_painted(block, ss_grid):
-            block.config(bg = click_color)
-
-    print(coords)
 
 def clear_screens():
     delete_widgets(screen_widgets)
@@ -203,8 +158,6 @@ def update_grid(root: Tk, canvas: ss.Canvas, width: int, height: int, scale_labe
 
     canvas_width, canvas_height = update_canvas_dimensions(canvas)
     root.config(width=canvas_width, height=canvas_height)
-    # root.grid_forget()
-    # root.grid(padx=(770-canvas_width)/2, pady=(620-canvas_height)/2, row = 3, column=2)
 
     scale = canvas_width / canvas.width * 100
     scale_label.config(text=f"Preview scale: {scale: .1f}%")
@@ -219,7 +172,7 @@ def update_grid(root: Tk, canvas: ss.Canvas, width: int, height: int, scale_labe
 def update_canvas_dimensions(canvas: ss.Canvas) -> tuple[int]:
     aspect_ratio = canvas.width/canvas.height
     max_geometry = 750
-    max_height = 600
+    max_height = 550
 
     if aspect_ratio > 1:
         canvas_width = max_geometry
@@ -232,8 +185,8 @@ def update_canvas_dimensions(canvas: ss.Canvas) -> tuple[int]:
 
 # WIDGET CREATION FUNCTIONS
 def generate_entry(root: Frame, name: str, rownumber: int, colnumber: int, default_value: int, save_at: dict[str,tuple[Widget]]) -> None:
-        label = Label(root, text=f"{name}:", justify=LEFT, padx=20)
-        label.grid(row=rownumber, column=colnumber)
+        label = Label(root, text=f"{name}:", justify='left', padx=20,font="Archivo")
+        label.grid(row=rownumber, column=colnumber, sticky=W)
 
         entry = Entry(root, width=5, justify=RIGHT)
         entry.insert(0,default_value)
@@ -255,37 +208,85 @@ def render_for_fusion(screens: list[ss.Screen], canvas: ss.Canvas, fusion_studio
     return fusion_output
 
 # COLOR PALETTE =====================
-hover_color = "#0000cc"
-original_color = "#0000ff"
-click_color = "#8888ff"
-screen_color = "yellow"
+hover_color = "#2C5360"
+original_color = "#40798C"
+click_color = "#70A9A1"
+screen_color = "#CFD7C7"
+background_color = "#0B2027"
 
 # STATE OF BUTTONS ===========
-def grid_state_1(widget: Widget):
-    widget.bind("<Enter>", darker_color)
-    widget.bind("<Leave>", regular_color)
+def grid_blocks_default_state(widget: Widget):
+    widget.bind("<Enter>", become_hover_color)
+    widget.bind("<Leave>", become_regular_color)
     widget.bind("<Button-1>", register_first_coord)
 
-def grid_state_2(widget: Widget):
+def grid_blocks_selected_state(widget: Widget):
     widget.unbind("<Leave>")
     widget.unbind("<Enter>")
     widget.unbind("<Button-1>")
-    widget.bind("<ButtonRelease-1>", register_second_coord)
+    widget.bind("<ButtonRelease-1>", register_2nd_coord_and_add_screen)
 
-def darker_color(event: Event):
+
+# EVENT HANDLING FUNCS
+
+def become_hover_color(event: Event):
     widget = event.widget
     widget.configure(bg = hover_color)
 
-def regular_color(event: Event):
+def become_regular_color(event: Event):
     widget = event.widget
     widget.configure(bg = original_color)
 
-def selected_color(event: Event):
+def become_selected_color(event: Event):
     widget = event.widget
     widget.configure(bg = click_color)
-    grid_state_2(widget)
+    grid_blocks_selected_state(widget)
+
+def register_first_coord(event: Event):
+    global coords
+
+    coords.clear()
+    coords.append(event.widget.index)
+    event.widget.config(bg = click_color)
+
+    for block in grid_block_widgets:
+        grid_blocks_selected_state(block)
+    print(coords)
 
 
+def should_be_painted(block: Widget, grid:ss.Grid) -> bool:
+    global coords
+
+    block_x, block_y = ss.get_coords(block.index,grid.matrix)
+    coords_1, coords_2 = ss.get_coords(coords[0],grid.matrix), ss.get_coords(coords[1],grid.matrix)
+    coords_x, coords_y = (coords_1[0], coords_2[0]+1), (coords_1[1], coords_2[1]+1)
+
+    if block_x in range(*coords_x):
+        if block_y in range(*coords_y):
+            return True
+    return False
+
+
+def register_2nd_coord_and_add_screen(event: Event):
+    global coords
+    global ss_grid
+
+    x,y = event.widget.winfo_pointerxy()
+    widget_released_on = event.widget.winfo_containing(x, y)
+
+    coords.append(widget_released_on.index)
+
+    for block in grid_block_widgets:
+        if should_be_painted(block, ss_grid):
+            block.config(bg = click_color)
+
+    print(coords)
+
+    add_screen(event.widget.master,coords)
+
+
+
+# GOT RID OF MAIN FUNCTION
 
 def main():
 
@@ -294,7 +295,7 @@ def main():
 
     # SETTING UP THE MAIN WINDOW ======================
     x = 1200
-    y = 900
+    y = 800
     dim = {
         "x": x,
         "y": y,
@@ -306,33 +307,53 @@ def main():
 
     #Root Window
     root.title('SplitScreener')
-    root.geometry(f"{dim['x']}x{dim['y']}+{dim['screenx_center'] - int(dim['x']/2)}+{dim['screeny_center'] - int(dim['y']/2)}")
+    root.geometry(f"{dim['x']}x{dim['y']}+{dim['screenx_center'] - int(dim['x']/2)}+{dim['screeny_center'] - int(dim['y']/2)}") # starts the window in the center of the screen
     # root.resizable(False,False)
+    root.minsize(1200,800)
 
+
+    # SETTING UP THE TK GRID
+    root.columnconfigure(index=1, weight=1, minsize=200)
+    root.columnconfigure(index=2, weight=1, minsize=800)
+    root.columnconfigure(index=3, weight=1, minsize=200)
+    root.rowconfigure(index=1,weight=1)
+    root.rowconfigure(index=2,weight=1)
+    root.rowconfigure(index=3,weight=1)
+    root.rowconfigure(index=4,weight=1)
+
+
+    frame = Frame(root)
+    frame.grid(padx=10, pady=10, row = 2, column=2)
 
     canvas_width, canvas_height = update_canvas_dimensions(ss_canvas)
 
+
+
     # spacer on top
-    Label(height=3).grid(row=1)
+    Label(root,height=1, text="Split Screener", font="Archivo 24 bold", justify=CENTER).grid(row=1,column=2, sticky=S, pady=20)
 
 
     # scale label
-    scale = canvas_width / ss_canvas.width * 100
-    preview_scale_lbl = Label(text=f"Preview scale: {scale: .1f}%", justify=LEFT, pady=0, padx = 20,font="Archivo 12")
-    preview_scale_lbl.grid(column=2,row=2,sticky=E,pady=0)
+    scale_text = canvas_width / ss_canvas.width * 100
+    preview_scale_lbl = Label(frame,text=f"Preview scale: {scale_text: .1f}%", justify=LEFT, pady=0, padx = 20,font="Archivo 12")
+    preview_scale_lbl.grid(column=1,row=1,sticky=NE,pady=10)
 
     # the canvas
-    canvas = Canvas(root, width = canvas_width, height = canvas_height, bg="#1e1e1e", bd=0, highlightthickness=0, relief='ridge')
-    canvas.grid(padx=10, pady=10, row = 3, column=2)
-    
+    canvas = Canvas(frame, width = canvas_width, height = canvas_height, bg=background_color, bd=0, highlightthickness=0, relief='ridge', cursor="fleur")
+    canvas.grid(row = 2, column=1, sticky=N)
+
+    render_bttn_frame = Frame(root)
+    render_bttn_frame.grid(row=3,column=2)
+
     # the render button
-    render_button = Button(root,height=2,font="Archivo 16", text="Render Fusion Output", command=lambda: render_for_fusion(list_of_ssscreens, ss_canvas,fusion_studio))
-    render_button.grid(column=2, row=   4)
-    
+    render_button = Button(render_bttn_frame,height=2,font="Archivo 16", text="Render Fusion Output", command=lambda: render_for_fusion(list_of_ssscreens, ss_canvas,fusion_studio))
+    render_button.grid(column=1, row=   1, sticky=N)
+
     # fusion studio checkbox
-    fu_studio_checkbox = Checkbutton(root,text="Fusion Studio (doesn't create MediaIns and Outs)", justify=LEFT,variable=fusion_studio, font="Archivo 10")
-    fu_studio_checkbox.grid(column=2, row=5 )
-    
+    fu_studio_checkbox = Checkbutton(render_bttn_frame,text="Fusion Studio (no MediaIns or Outs)", justify=LEFT,variable=fusion_studio, font="Archivo 10", pady=10)
+    fu_studio_checkbox.grid(column=1, row=2, sticky=N)
+
+
     # RENDER GRID FOR THE FIRST TIME ====================
     refresh_grid(canvas)
 
@@ -340,19 +361,19 @@ def main():
 
     # ADDING SOME BUTTONS ======================
     button_frame_left = Frame(bd=0, highlightthickness=0, relief='ridge')
-    button_frame_left.grid(column=1, row =3)
+    button_frame_left.grid(column=1, row =2)
 
     button_frame_right = Frame(bd=0, highlightthickness=0, relief='ridge')
-    button_frame_right.grid(column=3, row =3)
+    button_frame_right.grid(column=3, row =2)
 
 
-    add_screen_button = Button(button_frame_right, text="Add Screen", command=lambda: add_screen(canvas, coords))
-    add_screen_button.grid(row=3, column = 2,pady=10)
+    # add_screen_button = Button(button_frame_right, text="Add Screen", command=lambda: add_screen(canvas, coords))
+    # add_screen_button.grid(row=3, column = 2,pady=10)
 
-    clear_all_button = Button(button_frame_right, text="Clear Screens", command=clear_screens)
-    clear_all_button.grid(row=4, column = 2,pady=10)
-    
-    
+    clear_all_button = Button(button_frame_left, text="Clear Screens", command=clear_screens)
+    clear_all_button.grid(row=14, column = 1,pady=10, columnspan=2)
+
+
 
     # CANVAS SETTINGS
     canvas_entries = {}
@@ -384,12 +405,12 @@ def main():
     )
     update_grid_button.grid(row=13, column=1, columnspan=2)
 
-    
-    
-    
-    
+
+
+
+
     root.mainloop()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
