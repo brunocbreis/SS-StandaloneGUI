@@ -48,17 +48,13 @@ class MarginsExceedCanvas(Exception):
 class Margin:
     """Margin object. Values defined in pixels but returned normalized."""
 
-    def __init__(self, canvas: Canvas) -> None:     
+    def __init__(self, canvas: Canvas, *values: dict[int]) -> None:     
         self.canvas = canvas  
         self.canvas.give_birth(self.compute)
-        self._top_px = 0
-        self._left_px = 0
-        self._bottom_px = 0
-        self._right_px = 0
-        self._top = 0.0
-        self._left = 0.0
-        self._bottom = 0.0
-        self._right = 0.0
+        self._top_px = self._left_px = 0
+        self._bottom_px = self._right_px = 0
+        self._top = self._left = 0.0
+        self._bottom = self._right = 0.0
 
     def __str__(self) -> str:
         title = 'MARGIN\n'
@@ -71,7 +67,7 @@ class Margin:
         return self._top
 
     @top.setter
-    def top(self, value: int):
+    def top(self, value: int) -> None:
         if self._bottom_px + value > self.canvas.height:
             print("Margin values exceed canvas dimensions.")
             raise MarginsExceedCanvas
@@ -84,7 +80,7 @@ class Margin:
         return self._bottom
 
     @bottom.setter
-    def bottom(self, value: int):
+    def bottom(self, value: int) -> None:
         if self._top_px + value > self.canvas.height:
             print("Margin values exceed canvas dimensions.")
             raise MarginsExceedCanvas
@@ -97,7 +93,7 @@ class Margin:
         return self._left
 
     @left.setter
-    def left(self, value: int):
+    def left(self, value: int) -> None:
         if self._right_px + value > self.canvas.width:
             print("Margin values exceed canvas dimensions.")
             raise MarginsExceedCanvas
@@ -110,14 +106,18 @@ class Margin:
         return self._right
 
     @right.setter
-    def right(self, value: int):
+    def right(self, value: int) -> None:
         if self._left_px + value > self.canvas.width:
             print("Margin values exceed canvas dimensions.")
             raise MarginsExceedCanvas
         self._right_px = value
         self._right = value / self.canvas.width
 
-    def compute(self):
+    def all(self, value:int) -> None:
+        '''Sets all margins to the same pixel value'''
+        self.top = self.left = self.bottom = self.right = value
+
+    def compute(self) -> None:
         '''Recomputes normalized values for when something has changed in a parent class.'''
         self.top = self._top_px
         self.left = self._left_px
@@ -269,18 +269,6 @@ class Screen:
         colx = min(p1[0], p2[0])
         coly = min(p1[1], p2[1])
 
-        # n = 1
-        # for list in matrix:
-        #     if p2 in list:
-        #         colspan = list.index(p2) + 2 - p1
-        #         rowspan = n
-        #     n +=1
-        # colx = p1
-        # i = 1
-        # for list in matrix:
-        #     if p1 in list:
-        #         coly = i
-        #     i += 1
         return Screen(grid,colspan,rowspan,colx,coly)
 
     # SIMPLIFIES THE CALLING, COMPUTES ON THE GO    
