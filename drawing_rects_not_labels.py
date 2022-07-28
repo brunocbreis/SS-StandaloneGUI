@@ -137,8 +137,8 @@ class GridBlock(Block):
 
         for row in grid_block_screens:
             for block in row:
-                id = f'{block.colx},{block.coly}'
-                block = GridBlock(canvas,block,fill="#40798C",tag=id)
+                coords = f'{block.colx},{block.coly}'
+                block = GridBlock(canvas,block,fill="#40798C",tag=coords,outline="#1e1e1e")
 
     @staticmethod
     def config_all(**opts):

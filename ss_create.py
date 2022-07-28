@@ -35,7 +35,7 @@ def main():
     ##### RETURN VALUES -------------------------
     screen_values = []
     for screen in screens:
-        screen_value = screen.get_values()
+        screen_value = screen.compute()
         screen_values.append(screen_value)
 
     return screen_values

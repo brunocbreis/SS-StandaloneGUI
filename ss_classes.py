@@ -212,57 +212,24 @@ class Screen:
     rowspan: int
     colx: int
     coly: int
+    
 
     def __post_init__(self):
-        self._has_been_computed = False
+        self.compute()
+        self.grid.canvas.give_birth(self.compute)
 
     def __str__(self) -> str:
         message = f'Colw: {self.colspan}\tRoww: {self.rowspan}\nColx: {self.colx}\tColy: {self.coly}\n'
         return message
 
-    @property
-    def width(self) -> float:
-        '''Returns screen width, normalized.'''
-        grid = self.grid
-        width = grid.col_width * self.colspan + (self.colspan-1) * grid.gutter[0]
-        return width
-
-    @property
-    def height(self) -> float:
-        '''Returns screen height, normalized.'''
-        grid = self.grid
-        height = grid.row_height * self.rowspan + (self.rowspan-1) * grid.gutter[1]
-        return height
-
-    @property
-    def x(self):
-        '''Returns screen X position, normalized.'''
-        grid = self.grid
-        margin = grid.margin
-        x = self.width/2 + margin.left + (self.colx - 1) * (grid.col_width + grid.gutter[0])
-        return x
-
-    @property
-    def y(self):
-        '''Returns screen Y position, normalized.'''
-        grid = self.grid
-        margin = grid.margin
-        y = self.height/2 + margin.bottom + (self.coly - 1) * (grid.row_height + grid.gutter[1])
-        y = 1 - y
-        return y
-
-    @property
-    def size(self):
-        '''Returns screen size, normalized.'''
-        return max(self.width, self.height)
+    
 
     @staticmethod
     def create_from_coords(grid: Grid, point1: int, point2: int):
         matrix = grid.matrix
         p1 = get_coords(point1,matrix)
-        # p1 = min(point1,point2)
+
         p2 = get_coords(point2,matrix)
-        # p2 = max(point1, point2)
 
         colspan = abs(p1[0] - p2[0]) + 1
         rowspan = abs(p1[1] - p2[1]) + 1
@@ -271,16 +238,40 @@ class Screen:
 
         return Screen(grid,colspan,rowspan,colx,coly)
 
+    def request_update(self):
+        self._has_been_computed = False
+
     # SIMPLIFIES THE CALLING, COMPUTES ON THE GO    
-    def get_values(self) -> dict:
-        values = {
-            "Width": self.width,
-            "Height": self.height,
-            "Center.X": self.x,
-            "Center.Y": self.y,
-            "Size": self.size
+    def compute(self) -> None:
+        grid = self.grid
+        margin = grid.margin
+
+        width = grid.col_width * self.colspan + (self.colspan-1) * grid.gutter[0]
+        height = grid.row_height * self.rowspan + (self.rowspan-1) * grid.gutter[1]
+
+        size = max(width,height)
+
+        x = width/2 + margin.left + (self.colx - 1) * (grid.col_width + grid.gutter[0])
+        y = height/2 + margin.bottom + (self.coly - 1) * (grid.row_height + grid.gutter[1])
+        y = 1 - y
+
+        # the setters
+        self.width = width
+        self.height = height
+        self.x = x
+        self.y = y
+        self.size = size
+
+        self.values = {
+            "Width": width,
+            "Height": height,
+            "Center.X": x,
+            "Center.Y": y,
+            "Size": size
         }
-        return values
+
+    def get_values(self) -> dict[str,int]:
+        return self.values
 
 
 def test():
