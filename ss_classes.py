@@ -1,5 +1,13 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable
+
+# helper function for Screen classes
+def get_coords(item, matrix: list[list]) -> tuple[int,int]:
+  for i in range(len(matrix)):
+    if item in matrix[i]:
+      y = i
+      x = matrix[i].index(item)
+  return x+1, y+1
 
 
 class Canvas:
@@ -43,9 +51,6 @@ class Canvas:
         for child in self._children:
             child()
 
-class MarginsExceedCanvas(Exception):
-    """Error for when margins are too big. Should be called when changin resolution or margins"""
-    pass
 
 class Margin: 
     """Margin object. Values defined in pixels but returned normalized."""
@@ -170,15 +175,17 @@ class Margin:
 
         for child in self._children:
             child()
-       
-class Grid:
-    _children: list[Callable] = []
 
-    def __init__(self, canvas: Canvas, margin: Margin, composition: tuple[int,int] = (12,6)) -> None:
+
+class Grid:
+    """Grid object. Creates a layout of columns and rows and returns their dimensions in normalized values."""
+    _children: list[Callable] = []
+    _matrix: list[list[int]] = []
+
+    def __init__(self, canvas: Canvas, margin: Margin, layout: tuple[int,int] = (12,6)) -> None:
         self.canvas = canvas
         self.margin = margin
-        self._cols = composition[0]
-        self._rows = composition[1]
+        self._cols, self._rows = layout
 
         self.compute()
         self.margin.give_birth(self.compute)
@@ -240,28 +247,24 @@ class Grid:
         self.row_height = (1 - mg.top - mg.bottom -
                 (self.rows-1) * self.gutter[1]) / self.rows
 
+        self._matrix.clear()
+        for row in range(self.rows):
+            x = row * self.cols + 1
+            matrix_row = [col + x for col in range(self.cols)]
+            self._matrix.append(matrix_row)
+
         for child in self._children:
             child()
 
     @property
     def matrix(self) -> list:
-        matrix = []
-        for row in range(self.rows):
-            x = row * self.cols + 1
-            matrix_row = [col + x for col in range(self.cols)]
-            matrix.append(matrix_row)
-        return matrix
+        return self._matrix
 
-
-def get_coords(item, matrix: list[list]):
-  for i in range(len(matrix)):
-    if item in matrix[i]:
-      y = i
-      x = matrix[i].index(item)
-  return x+1, y+1
 
 @dataclass
 class Screen:  # no setters defined. needs to compute after change in self
+    """Screen object. Its dimensions and position are defined in columns and rows and returned in normalized values."""
+
     grid: Grid
     colspan: int
     rowspan: int
@@ -303,7 +306,7 @@ class Screen:  # no setters defined. needs to compute after change in self
         y = height/2 + margin.bottom + (self.coly - 1) * (grid.row_height + grid.gutter[1])
         y = 1 - y
 
-        # the setters
+        # the "setters"
         self.width = width
         self.height = height
         self.x = x
@@ -320,6 +323,45 @@ class Screen:  # no setters defined. needs to compute after change in self
 
     def get_values(self) -> dict[str,int]:
         return self.values
+
+
+class GridCell(Screen):
+    """Grid Cells are Screens of 1 col width x 1 row height that compose a grid."""
+
+    def __init__(self, grid: Grid, index: int):
+        self.colx, self.coly = get_coords(index, grid.matrix)
+        self.width = grid.col_width
+        self.height = grid.row_height
+        self.compute()
+        self.grid.give_birth(self.compute)
+    
+    def generate_all(self,grid:Grid) -> list:
+        all_blocks = []
+        for row in grid.matrix:
+            for index in row:
+                all_blocks.append(GridCell(grid,index))
+        return all_blocks
+
+    def compute(self):
+        grid = self.grid
+        margin = grid.margin
+
+        x = self.width/2 + margin.left + (self.colx - 1) * (grid.col_width + grid.gutter[0])
+        y = self.height/2 + margin.bottom + (self.coly - 1) * (grid.row_height + grid.gutter[1])
+        y = 1 - y
+
+        self.x = x
+        self.y = y
+
+
+# Exceptions (not yet implemented)
+class MarginsExceedCanvas(Exception):
+    """Error for when margins are too big. Should be called when changin resolution or margins"""
+    ...
+
+class GutterExceedsCanvas(Exception):
+    ...
+
 
 
 def test():
