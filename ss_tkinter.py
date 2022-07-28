@@ -12,16 +12,10 @@ coords = [1,1]
 
 
 # INITIALIZE SPLIT SCREENER OBJECTS ========================
-ss_canvas = ss.Canvas()
-ss_canvas.width = 1920
-ss_canvas.height = 1080
+ss_canvas = ss.Canvas((1920,1080))
+ss_margin = ss.Margin(ss_canvas,25,gutter=25)
+ss_grid = ss.Grid(ss_canvas,ss_margin,(12,6))
 
-ss_margin = ss.Margin(ss_canvas)
-ss_grid = ss.Grid(ss_canvas,ss_margin)
-
-ss_margin.top, ss_margin.left, ss_margin.bottom, ss_margin.right, ss_grid.gutter = 25,25,25,25,25
-ss_grid.cols = 12
-ss_grid.rows = 6
 
 
 # COLOR PALETTE =====================
@@ -278,10 +272,10 @@ def update_grid(root: Tk, canvas: ss.Canvas, width: int, height: int, scale_labe
     scale_label.config(text=f"Preview scale: {scale: .1f}%")
 
     # update margin
-    margin.top, margin.left, margin.bottom, margin.right = top, left, bottom, right
+    margin.top, margin.left, margin.bottom, margin.right, margin.gutter = top, left, bottom, right, gutter
 
     # update grid
-    grid.cols, grid.rows, grid.gutter = cols, rows, gutter
+    grid.cols, grid.rows = cols, rows
     refresh_grid(root)
 
 def update_canvas_dimensions(canvas: ss.Canvas) -> tuple[int]:
@@ -563,7 +557,7 @@ def main():
     grid_entries = {}
     mk_entry(button_frame_left, "Cols",    9, 1, ss_grid.cols,       grid_entries)
     mk_entry(button_frame_left, "Rows",   10, 1, ss_grid.rows,       grid_entries)
-    mk_entry(button_frame_left, "Gutter", 11, 1, ss_grid._gutter_px, grid_entries)
+    mk_entry(button_frame_left, "Gutter", 11, 1, ss_margin._gutter_px, grid_entries)
     Label(button_frame_left, height=1).grid(row=12, column=1)
 
     update_grid_button = Button(

@@ -170,14 +170,10 @@ class GridBlock(Block):
 
 root = tk.Tk()
 
-ss_canvas = ss.Canvas()
-ss_canvas.width, ss_canvas.height = 500,500
+ss_canvas = ss.Canvas((500,500))
+ss_margin = ss.Margin(ss_canvas,15,gutter=15)
+ss_grid = ss.Grid(ss_canvas,ss_margin,(12,6))
 
-ss_margin = ss.Margin(ss_canvas)
-ss_margin.top, ss_margin.left, ss_margin.bottom, ss_margin.right = 15,15,15,15
-ss_grid = ss.Grid(ss_canvas,ss_margin)
-ss_grid.cols, ss_grid.rows = 12,6
-ss_grid.gutter = 15
 
 
 canvas = tk.Canvas(root, width=500,height=500,background="#1e1e1e")
