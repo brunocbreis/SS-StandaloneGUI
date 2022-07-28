@@ -30,14 +30,15 @@ def main():
     ]
 
     print(screens[0].x,1-screens[0].y,screens[0].width, screens[0].height)
+    print(screens[0])
 
-    # ##### RETURN VALUES -------------------------
-    # screen_values = []
-    # for screen in screens:
-    #     screen_value = screen.get_values()
-    #     screen_values.append(screen_value)
+    ##### RETURN VALUES -------------------------
+    screen_values = []
+    for screen in screens:
+        screen_value = screen.get_values()
+        screen_values.append(screen_value)
 
-
+    return screen_values
     # ##### RENDER OUTPUT -----------------------
     # fusion_output = fu.render_fusion_output(screen_values, canvas.resolution, True)
     # pyperclip.copy(fusion_output)
@@ -48,5 +49,5 @@ def main():
     # if want_to_save:
     #     fu.save_preset_for_fusion('presets',fusion_output,want_to_save)
         
-if __name__ == "__main__":
-    main()
+        
+screen_values = main()
