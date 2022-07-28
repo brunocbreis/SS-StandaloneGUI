@@ -2,6 +2,8 @@ import pyperclip
 import ss_classes as ss
 from tkinter import *
 from fusion_tool_generator import render_fusion_output
+from PIL import Image, ImageTk
+import darkdetect
 
 
 # GLOBAL VARIABLES AND LISTS ========================
@@ -24,113 +26,6 @@ original_color = "#40798C"
 click_color = "#70A9A1"
 screen_color = "#CFD7C7"
 background_color = "#0B2027"
-
-
-# # RECT TRACKER
-
-# def groups(glist, numPerGroup=2):
-# 	result = []
-
-# 	i = 0
-# 	cur = []
-# 	for item in glist:
-# 		if not i < numPerGroup:
-# 			result.append(cur)
-# 			cur = []
-# 			i = 0
-
-# 		cur.append(item)
-# 		i += 1
-
-# 	if cur:
-# 		result.append(cur)
-
-# 	return result
-
-# def average(points):
-# 	aver = [0,0]
-	
-# 	for point in points:
-# 		aver[0] += point[0]
-# 		aver[1] += point[1]
-		
-# 	return aver[0]/len(points), aver[1]/len(points)
-
-# class RectTracker:
-	
-# 	def __init__(self, canvas):
-# 		self.canvas = canvas
-# 		self.item = None
-		
-# 	def draw(self, start, end, **opts):
-# 		"""Draw the rectangle"""
-# 		return self.canvas.create_rectangle(*(list(start)+list(end)), **opts)
-		
-# 	def autodraw(self, **opts):
-# 		"""Setup automatic drawing; supports command option"""
-# 		self.start = None
-# 		self.canvas.bind("<Button-1>", self.__update, '+')
-# 		self.canvas.bind("<B1-Motion>", self.__update, '+')
-# 		self.canvas.bind("<ButtonRelease-1>", self.__stop, '+')
-		
-# 		self._command = opts.pop('command', lambda *args: None)
-# 		self.rectopts = opts
-		
-# 	def __update(self, event):
-# 		if not self.start:
-# 			self.start = [event.x, event.y]
-# 			return
-		
-# 		if self.item is not None:
-# 			self.canvas.delete(self.item)
-# 		self.item = self.draw(self.start, (event.x, event.y), **self.rectopts)
-# 		self._command(self.start, (event.x, event.y))
-		
-# 	def __stop(self, event):
-# 		self.start = None
-# 		self.canvas.delete(self.item)
-# 		self.item = None
-		
-# 	def hit_test(self, start, end, tags=None, ignoretags=None, ignore=[]):
-# 		"""
-# 		Check to see if there are items between the start and end
-# 		"""
-# 		ignore = set(ignore)
-# 		ignore.update([self.item])
-		
-# 		# first filter all of the items in the canvas
-# 		if isinstance(tags, str):
-# 			tags = [tags]
-		
-# 		if tags:
-# 			tocheck = []
-# 			for tag in tags:
-# 				tocheck.extend(self.canvas.find_withtag(tag))
-# 		else:
-# 			tocheck = self.canvas.find_all()
-# 		tocheck = [x for x in tocheck if x != self.item]
-# 		if ignoretags:
-# 			if not hasattr(ignoretags, '__iter__'):
-# 				ignoretags = [ignoretags]
-# 			tocheck = [x for x in tocheck if x not in self.canvas.find_withtag(it) for it in ignoretags]
-		
-# 		self.items = tocheck
-		
-# 		# then figure out the box
-# 		xlow = min(start[0], end[0])
-# 		xhigh = max(start[0], end[0])
-		
-# 		ylow = min(start[1], end[1])
-# 		yhigh = max(start[1], end[1])
-		
-# 		items = []
-# 		for item in tocheck:
-# 			if item not in ignore:
-# 				x, y = average(groups(self.canvas.coords(item)))
-# 				if (xlow < x < xhigh) and (ylow < y < yhigh):
-# 					items.append(item)
-	
-# 		return items
 
 
 
@@ -399,10 +294,16 @@ def register_2nd_coord_and_add_screen(event: Event):
 
 
 
+
 # ACTUAL APP    ==================================
 def main():
     root = Tk()
 
+    
+
+    
+    
+    
     # TK VARS
     fusion_studio = IntVar()
     
@@ -410,11 +311,13 @@ def main():
     # REGULAR VARS
     canvas_width, canvas_height = update_canvas_dimensions(ss_canvas)
 
-    scale_text_value = DoubleVar()
-    scale_text_value.set(canvas_width / ss_canvas.width * 100) # Broke, doesn't update automatically any more
+    scale_text_value = canvas_width / ss_canvas.width * 100
 
-    scale_text = StringVar()
-    scale_text.set(f"Preview scale: {scale_text_value.get(): .1f}%")
+
+    
+
+
+
 
 
     #Root Window Settings
@@ -449,19 +352,30 @@ def main():
     footer.grid(            column=1,   row=4,  columnspan=3)
 
 
-    # APP TITLE
-    app_title = Label(header, height=1, text="SplitScreener", font="Archivo 24 bold", justify=CENTER)
+    # APP LOGO
+    if darkdetect.isDark():
+        logo_img = Image.open('images/SS_logo_white.png').resize((173,62), Image.ANTIALIAS)
+        logo = ImageTk.PhotoImage(logo_img)
+    else:
+        logo_img = Image.open('images/SS_logo_black.png').resize((173,62), Image.ANTIALIAS)
+        logo = ImageTk.PhotoImage(logo_img)
 
-    app_title.pack(anchor=S, pady=20)
+
+
+    # APP TITLE
+    app_title = Label(header, height=100, text="SplitScreener", font="Archivo 24 bold", justify=CENTER, image=logo)
+
+    app_title.pack(anchor=S, pady=10)
 
 
     # CREATOR FRAME WIDGETS
     # scale label
     preview_scale_lbl = Label(
         creator_frame,
-        textvariable=scale_text, 
+        text= f"Preview scale: {scale_text_value: .1f}%",
+        # textvariable=scale_text, 
         justify=LEFT, 
-        pady=0, padx = 20,
+        pady=0, padx = 10,
         font="Archivo 12"
         )
 
@@ -475,18 +389,7 @@ def main():
 
     
 
-    # tracker = RectTracker(canvas)
 
-    # def onDrag(start, end):
-    #     global x,y
-    #     items = tracker.hit_test(start, end)
-    #     for x in tracker.items:
-    #         if x not in items:
-    #             canvas.itemconfig(x, fill='grey')
-    #         else:
-    #             canvas.itemconfig(x, fill='blue')
-	
-    # tracker.autodraw(fill="", width=2, command=onDrag)
 
     # gridding...   
     preview_scale_lbl.grid(column=1,row=2,sticky=NE,pady=10)
@@ -550,14 +453,15 @@ def main():
     mk_entry(button_frame_left, "Left",    5, 1, ss_margin._left_px,      margin_entries)
     mk_entry(button_frame_left, "Bottom",  6, 1, ss_margin._bottom_px,    margin_entries)
     mk_entry(button_frame_left, "Right",   7, 1, ss_margin._right_px,     margin_entries)
-    Label(button_frame_left, height=1).grid(row= 8, column=1)
+    mk_entry(button_frame_left, "Gutter", 8, 1, ss_margin._gutter_px,     margin_entries)
+    Label(button_frame_left, height=1).grid(row= 9, column=1)
+
 
 
     # GRID SETTINGS 9,10,11,12,13==================
     grid_entries = {}
-    mk_entry(button_frame_left, "Cols",    9, 1, ss_grid.cols,       grid_entries)
-    mk_entry(button_frame_left, "Rows",   10, 1, ss_grid.rows,       grid_entries)
-    mk_entry(button_frame_left, "Gutter", 11, 1, ss_margin._gutter_px, grid_entries)
+    mk_entry(button_frame_left, "Cols",    10, 1, ss_grid.cols,       grid_entries)
+    mk_entry(button_frame_left, "Rows",   11, 1, ss_grid.rows,       grid_entries)
     Label(button_frame_left, height=1).grid(row=12, column=1)
 
     update_grid_button = Button(
@@ -569,7 +473,7 @@ def main():
             int(margin_entries['Bottom'][1].get()), int(margin_entries['Right'][1].get()),
 
             ss_grid, int(grid_entries['Cols'][1].get()), int(grid_entries['Rows'][1].get()), 
-            int(grid_entries['Gutter'][1].get())
+            int(margin_entries['Gutter'][1].get())
             )
     )
     update_grid_button.grid(row=13, column=1, columnspan=2)
@@ -578,20 +482,7 @@ def main():
     # RENDER GRID FOR THE FIRST TIME ====================
     refresh_grid(canvas)
    
-    x, y = None, None
-    def cool_design(event):
-        global x, y
-        kill_xy()
-        
-        dashes = [3, 2]
-        x = canvas.create_line(event.x, 0, event.x, 1000, dash=dashes, tags='no')
-        y = canvas.create_line(0, event.y, 1000, event.y, dash=dashes, tags='no')
-        canvas.tag_raise(x, y)
-        
-    def kill_xy(event=None):
-        canvas.delete('no')
-
-    canvas.bind('<Motion>', cool_design, '+')
+    
 
 
 

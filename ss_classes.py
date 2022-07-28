@@ -268,15 +268,15 @@ class Screen:  # no setters defined. needs to compute after change in self
     grid: Grid
     colspan: int
     rowspan: int
-    colx: int
-    coly: int
+    row: int
+    col: int
     
     def __post_init__(self):
         self.compute()
         self.grid.give_birth(self.compute)
 
     def __str__(self) -> str:
-        message = f'Colw: {self.colspan}\tRoww: {self.rowspan}\nColx: {self.colx}\tColy: {self.coly}\n'
+        message = f'Colw: {self.colspan}\tRoww: {self.rowspan}\nColx: {self.row}\tColy: {self.col}\n'
         return message
 
     @staticmethod
@@ -302,9 +302,9 @@ class Screen:  # no setters defined. needs to compute after change in self
 
         size = max(width,height)
 
-        x = width/2 + margin.left + (self.colx - 1) * (grid.col_width + grid.gutter[0])
-        y = height/2 + margin.bottom + (self.coly - 1) * (grid.row_height + grid.gutter[1])
-        y = 1 - y
+        x = width/2 + margin.left + (self.row - 1) * (grid.col_width + grid.gutter[0])
+        y = height/2 + margin.bottom + (self.col - 1) * (grid.row_height + grid.gutter[1])
+        # y = 1 - y
 
         # the "setters"
         self.width = width
@@ -329,13 +329,16 @@ class GridCell(Screen):
     """Grid Cells are Screens of 1 col width x 1 row height that compose a grid."""
 
     def __init__(self, grid: Grid, index: int):
-        self.colx, self.coly = get_coords(index, grid.matrix)
+        self.grid = grid
+        self.index = index
+        self.row, self.col = get_coords(index, grid.matrix)
         self.width = grid.col_width
         self.height = grid.row_height
         self.compute()
         self.grid.give_birth(self.compute)
     
-    def generate_all(self,grid:Grid) -> list:
+    @staticmethod
+    def generate_all(grid:Grid) -> list:
         all_blocks = []
         for row in grid.matrix:
             for index in row:
@@ -346,8 +349,8 @@ class GridCell(Screen):
         grid = self.grid
         margin = grid.margin
 
-        x = self.width/2 + margin.left + (self.colx - 1) * (grid.col_width + grid.gutter[0])
-        y = self.height/2 + margin.bottom + (self.coly - 1) * (grid.row_height + grid.gutter[1])
+        x = self.width/2 + margin.left + (self.row - 1) * (grid.col_width + grid.gutter[0])
+        y = self.height/2 + margin.bottom + (self.col - 1) * (grid.row_height + grid.gutter[1])
         y = 1 - y
 
         self.x = x
@@ -398,8 +401,8 @@ def test():
     #         grid = grid,
     #         colspan= 6,
     #         rowspan= 6,
-    #         colx = 1,
-    #         coly = 1
+    #         row = 1,
+    #         col = 1
     #     ),
     #     Screen(
     #         grid = grid,

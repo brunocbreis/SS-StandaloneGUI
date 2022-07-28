@@ -73,8 +73,8 @@ while wants_more_screens:
         grid = grid,
         colspan=cv[0],
         rowspan=cv[1],
-        colx=cv[2],
-        coly=cv[3]
+        row=cv[2],
+        col=cv[3]
         )
     screens.append(screen)
     wants_more_screens = user.ask_if_more_screens()
