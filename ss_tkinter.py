@@ -286,15 +286,18 @@ def update_grid(root: Tk, canvas: ss.Canvas, width: int, height: int, scale_labe
 
 def update_canvas_dimensions(canvas: ss.Canvas) -> tuple[int]:
     aspect_ratio = canvas.width/canvas.height
-    max_geometry = 750
+    max_width = 750
     max_height = 550
 
     if aspect_ratio > 1:
-        canvas_width = max_geometry
+        canvas_width = max_width
         canvas_height = canvas_width / aspect_ratio
     else:
         canvas_height = max_height
         canvas_width = canvas_height * aspect_ratio
+
+    # scale_var.set(canvas_width / ss_canvas.width * 100)
+    # scale_text_var.set(f"Preview scale: {scale_text_value.get(): .1f}%")
 
     return canvas_width, canvas_height
 
