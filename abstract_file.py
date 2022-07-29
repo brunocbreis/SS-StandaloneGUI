@@ -31,16 +31,15 @@ def delete_screen():
 def flip_horizontal(screens: list[ss.Screen]) -> None: # GRID (to children) || depends on screen setter methods
     '''flips screen layout horizontally'''
     for screen in screens:
-        screen.row = screen.grid.cols - screen.row
-        screen.compute() # or implement setters so that it computes automatically
+        screen.col = screen.grid.cols - screen.col
         ...
     ...
 
 def flip_vertical(screens: list[ss.Screen]) -> None: # GRID (to children)
     '''flips screen layout vertically'''
     for screen in screens:
-        screen.col = screen.grid.rows - screen.col
-        screen.compute()
+        screen.row = screen.grid.rows - screen.row
+ 
     ...
 
 def rotate_grid(): # clockwise, clounterclockwise

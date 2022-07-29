@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Callable
 
 # helper function for Screen classes
@@ -261,23 +260,35 @@ class Grid:
         return self._matrix
 
 
-@dataclass
-class Screen:  # no setters defined. needs to compute after change in self
+class Screen:  
     """Screen object. Its dimensions and position are defined in columns and rows and returned in normalized values."""
+    list_of_screens = []
+    count = 0
 
-    grid: Grid
-    colspan: int
-    rowspan: int
-    row: int
-    col: int
-    
-    def __post_init__(self):
+    def __init__(self, grid: Grid, colspan: int, rowspan: int, col: int, row: int) -> None:
+        self.grid = grid
+        
+        self._colspan = colspan
+        self._rowspan = rowspan
+
+        self._col = col
+        self._row = row
+
+        Screen.count += 1
+
+        self._name: str = f"SSScreen{Screen.count}"
+
         self.compute()
         self.grid.give_birth(self.compute)
 
+        self.list_of_screens.append(self)
+
     def __str__(self) -> str:
-        message = f'Colw: {self.colspan}\tRoww: {self.rowspan}\nColx: {self.row}\tColy: {self.col}\n'
+        message = f'Colw: {self.colspan}\tRoww: {self.rowspan}\nColx: {self.col}\tColy: {self.row}\n'
         return message
+
+    def delete(self) -> None:
+        Screen.list_of_screens.remove(self)
 
     @staticmethod
     def create_from_coords(grid: Grid, point1: int, point2: int):
@@ -288,23 +299,99 @@ class Screen:  # no setters defined. needs to compute after change in self
 
         colspan = abs(p1[0] - p2[0]) + 1
         rowspan = abs(p1[1] - p2[1]) + 1
-        colx = min(p1[0], p2[0])
-        coly = min(p1[1], p2[1])
+        col = min(p1[0], p2[0])
+        row = min(p1[1], p2[1])
 
-        return Screen(grid,colspan,rowspan,colx,coly)
+        return Screen(grid,colspan,rowspan,col,row)
    
+   
+    # Screen transformations ==========================
+    @staticmethod
+    def flip_horizontally():
+        """Flips current screen layout horizontally"""
+        for screen in Screen.list_of_screens:
+            screen.col = screen.grid.cols - screen.col
+
+    @staticmethod
+    def flip_vertically():
+        """Flips current screen layout vertically"""
+        for screen in Screen.list_of_screens:
+            screen.row = screen.grid.rows - screen.row
+    # =================================================
+
+
+    # Properties and setters ==========================
+    @property
+    def colspan(self) -> int:
+        return self._colspan
+
+    @colspan.setter
+    def colspan(self, value: int) -> None:
+        self._colspan = value
+        self.compute()
+
+    @property
+    def rowspan(self) -> int:
+        return self._rowspan
+
+    @rowspan.setter
+    def rowspan(self, value: int) -> None:
+        self._rowspan = value
+        self.compute()
+
+    @property
+    def col(self) -> int:
+        return self._col
+
+    @col.setter
+    def col(self, value: int) -> None:
+        self._col = value
+        self.compute()
+
+    @property
+    def row(self) -> int:
+        return self._row
+
+    @row.setter
+    def row(self, value: int) -> None:
+        self._row = value
+        self.compute()
+
+    @property
+    def name(self) -> str:
+        return self._name
+    
+    @name.setter
+    def name(self, value: str) -> None:
+        if value in self.list_of_screens:
+            print("Please choose another name.")
+            return
+        self._name = value
+    # ================================================
+
+
+    def edit(self, colspan: int, rowspan: int, col: int, row: int) -> None:
+        """For editing multiple attributes at the same time. Computes only once."""
+
+        self._colspan = colspan
+        self._rowspan = rowspan
+        self._col = col
+        self._row = row
+        self.compute()
+    
     def compute(self) -> None:
+        """Normalizes pixel values."""
+
         grid = self.grid
         margin = grid.margin
 
-        width = grid.col_width * self.colspan + (self.colspan-1) * grid.gutter[0]
-        height = grid.row_height * self.rowspan + (self.rowspan-1) * grid.gutter[1]
+        width = grid.col_width * self._colspan + (self._colspan-1) * grid.gutter[0]
+        height = grid.row_height * self._rowspan + (self._rowspan-1) * grid.gutter[1]
 
         size = max(width,height)
 
-        x = width/2 + margin.left + (self.row - 1) * (grid.col_width + grid.gutter[0])
-        y = height/2 + margin.bottom + (self.col - 1) * (grid.row_height + grid.gutter[1])
-        # y = 1 - y
+        x = width/2 + margin.left + (self._col - 1) * (grid.col_width + grid.gutter[0])
+        y = height/2 + margin.bottom + (self._row - 1) * (grid.row_height + grid.gutter[1])
 
         # the "setters"
         self.width = width
@@ -324,6 +411,7 @@ class Screen:  # no setters defined. needs to compute after change in self
     def get_values(self) -> dict[str,int]:
         return self.values
 
+    
 
 class GridCell(Screen):
     """Grid Cells are Screens of 1 col width x 1 row height that compose a grid."""
@@ -331,7 +419,7 @@ class GridCell(Screen):
     def __init__(self, grid: Grid, index: int):
         self.grid = grid
         self.index = index
-        self.row, self.col = get_coords(index, grid.matrix)
+        self.col, self.row = get_coords(index, grid.matrix)
         self.width = grid.col_width
         self.height = grid.row_height
         self.compute()
@@ -349,8 +437,8 @@ class GridCell(Screen):
         grid = self.grid
         margin = grid.margin
 
-        x = self.width/2 + margin.left + (self.row - 1) * (grid.col_width + grid.gutter[0])
-        y = self.height/2 + margin.bottom + (self.col - 1) * (grid.row_height + grid.gutter[1])
+        x = self.width/2 + margin.left + (self.col - 1) * (grid.col_width + grid.gutter[0])
+        y = self.height/2 + margin.bottom + (self.row - 1) * (grid.row_height + grid.gutter[1])
         y = 1 - y
 
         self.x = x
