@@ -1,6 +1,8 @@
+from tkinter import ttk
 import pyperclip
 import ss_classes as ss
 from tkinter import *
+from tkinter.font import Font
 from fusion_tool_generator import render_fusion_output
 from PIL import Image, ImageTk
 import darkdetect
@@ -332,8 +334,8 @@ def main():
 
     
 
-
-
+    # Font
+    archivo = Font(family="Archivo SemiExpanded")
 
 
     #Root Window Settings
@@ -369,13 +371,12 @@ def main():
 
 
     # APP LOGO
-    if darkdetect.isDark():
-        logo_img = Image.open('images/SS_logo_white.png').resize((173,62), Image.ANTIALIAS)
-        logo = ImageTk.PhotoImage(logo_img)
-    else:
-        logo_img = Image.open('images/SS_logo_black.png').resize((173,62), Image.ANTIALIAS)
-        logo = ImageTk.PhotoImage(logo_img)
+    # if darkdetect.isDark():
+    #     logo_img = Image.open('images/SS_logo_white.png').resize((173,62), Image.ANTIALIAS)
+    #     logo = ImageTk.PhotoImage(logo_img)
 
+    logo_img = Image.open('images/SS_logo_black.png').resize((173,62), Image.Resampling.LANCZOS)
+    logo = ImageTk.PhotoImage(logo_img)
 
 
     # APP TITLE
@@ -392,7 +393,7 @@ def main():
         # textvariable=scale_text, 
         justify=LEFT, 
         pady=0, padx = 10,
-        font="Archivo 12"
+        font=archivo
         )
 
     # the canvas
@@ -414,10 +415,16 @@ def main():
     
     # RENDER BUTTON FRAME WIDGETS
     # the render button
+    render_bttn_img = Image.open('images/btn_render@0.5x.png')
+    render_bttn_img = ImageTk.PhotoImage(render_bttn_img)
+
     render_button = Button(
         render_bttn_frame,
-        height=2,font="Archivo 16", 
-        text="Render Fusion Output", 
+        # height=3,font="Archivo 16", 
+        text="Render Fusion Output",
+        cursor="hand2", 
+        borderwidth=0,
+        image=render_bttn_img,
         command=lambda: render_for_fusion(
             list_of_ssscreens, 
             ss_canvas,
@@ -425,6 +432,18 @@ def main():
             status_bar_text
             )
         )
+
+    render_button = Label(render_bttn_frame,
+        image=render_bttn_img,cursor="hand2",
+    )
+    render_button.bind('<Button-1>',
+                lambda e: render_for_fusion(
+                list_of_ssscreens, 
+                ss_canvas,
+                fusion_studio, 
+                status_bar_text
+                )
+            )
 
     # fusion studio checkbox
     fu_studio_checkbox = Checkbutton(
