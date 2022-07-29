@@ -153,27 +153,23 @@ def clear_screens(announce: StringVar):
     list_of_ssscreens.clear()
     print(list_of_ssscreens)
 
-def update_grid(root: Tk, canvas: ss.Canvas, width: int, height: int, scale_label: Label,
+def update_grid(tk_canvas: Canvas, ss_canvas: ss.Canvas, width: int, height: int, scale_label: Label,
                 margin: ss.Margin, top: int, left: int, bottom: int, right: int,
                 grid: ss.Grid, cols: int, rows: int, gutter: int) -> None:
     
     # update canvas
-    canvas.width, canvas.height = width, height
+    ss_canvas.width, ss_canvas.height = width, height
 
-    canvas_width, canvas_height = update_canvas_dimensions(canvas)
-    root.config(width=canvas_width, height=canvas_height)
-
-    scale = canvas_width / canvas.width * 100
-    scale_label.config(text=f"Preview scale: {scale: .1f}%")
+    update_canvas_dims(ss_canvas, tk_canvas, scale_label)
 
     # update margin
     margin.top, margin.left, margin.bottom, margin.right, margin.gutter = top, left, bottom, right, gutter
 
     # update grid
     grid.cols, grid.rows = cols, rows
-    refresh_grid(root)
+    refresh_grid(tk_canvas)
 
-def update_canvas_dimensions(canvas: ss.Canvas) -> tuple[int]:
+def compute_canvas_dims(canvas: ss.Canvas) -> tuple[int]:
     aspect_ratio = canvas.width/canvas.height
     max_width = 750
     max_height = 550
@@ -189,6 +185,13 @@ def update_canvas_dimensions(canvas: ss.Canvas) -> tuple[int]:
     # scale_text_var.set(f"Preview scale: {scale_text_value.get(): .1f}%")
 
     return canvas_width, canvas_height
+
+def update_canvas_dims(ss_canvas: ss.Canvas, root: Canvas, scale_label: Label) -> None:
+    canvas_width, canvas_height = compute_canvas_dims(ss_canvas)
+    root.config(width=canvas_width, height=canvas_height)
+
+    scale = canvas_width / ss_canvas.width * 100
+    scale_label.config(text=f"Preview scale: {scale: .1f}%")
 
 
 # INTERFACE WIDGET CREATION FUNCTIONS
@@ -303,12 +306,17 @@ def flip_v(root: Canvas):
     ss.Screen.flip_vertically()
     refresh_grid(root)
 
+def rotate_cw(ss_canvas: ss.Canvas, tk_canvas: Canvas, grid: ss.Grid, scale_label: Label):
+    grid.rotate_clockwise()
+    update_canvas_dims(ss_canvas, tk_canvas, scale_label)
+    refresh_grid(tk_canvas)
+
 # ACTUAL APP    ==================================
 def main():
     root = Tk()
 
     
-
+    # root.option_add("Archivo", "TkDefaultFont")
     
     
     
@@ -317,7 +325,7 @@ def main():
     
 
     # REGULAR VARS
-    canvas_width, canvas_height = update_canvas_dimensions(ss_canvas)
+    canvas_width, canvas_height = compute_canvas_dims(ss_canvas)
 
     scale_text_value = canvas_width / ss_canvas.width * 100
 
@@ -453,6 +461,9 @@ def main():
 
     flipv_button = Button(button_frame_right,text="Flip Vertically", command=lambda: flip_v(canvas))
     flipv_button.grid(row=2,column=1,pady=10)
+
+    # cw_button = Button(button_frame_right,text="Rotate Clockwise", command=lambda: rotate_cw(ss_canvas,canvas,ss_grid,scale_text_value))
+    # cw_button.grid(row=3,column=1,pady=10)
 
     # CANVAS SETTINGS
     canvas_entries = {}

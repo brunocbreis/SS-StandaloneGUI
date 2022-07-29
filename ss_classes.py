@@ -1,4 +1,6 @@
+from __future__ import annotations
 from typing import Callable
+
 
 # helper function for Screen classes
 def get_coords(item, matrix: list[list]) -> tuple[int,int]:
@@ -148,6 +150,16 @@ class Margin:
         self.compute()
 
     @property
+    def tlbr(self) -> dict[str,float]:
+        return self.all
+
+    @tlbr.setter
+    def tlbr(self, values: tuple[int,int,int,int]) -> None:
+        '''Set all margins at the same time, with different values (top, left, bottom, right)'''
+        self._top_px, self._left_px, self._bottom_px, self._right_px = values
+        self.compute()
+
+    @property
     def gutter(self) -> tuple[float,float]:
         '''Returns Gutter values (w,h), normalized.'''
         return self._gutter_w, self._gutter_h
@@ -197,6 +209,14 @@ class Grid:
     def give_birth(self, function: Callable) -> None:
         self._children.append(function)
 
+    def rotate_clockwise(self) -> None:
+        self.canvas.resolution = self.canvas.height, self.canvas.width
+        self.margin.tlbr = self.margin.right, self.margin.top, self.margin.left, self.margin.bottom
+        self.composition = self.rows, self.cols
+        ...
+
+    def rotate_counterclockwise(self) -> None:
+        ...
 
     @property
     def cols(self) -> int:
@@ -262,10 +282,10 @@ class Grid:
 
 class Screen:  
     """Screen object. Its dimensions and position are defined in columns and rows and returned in normalized values."""
-    list_of_screens = []
+    list_of_screens: list[Screen] = None
     count = 0
 
-    def __init__(self, grid: Grid, colspan: int, rowspan: int, col: int, row: int) -> None:
+    def __init__(self, grid: Grid, colspan: int, rowspan: int, col: int, row: int) -> Screen:
         self.grid = grid
         
         self._colspan = colspan
@@ -281,6 +301,9 @@ class Screen:
         self.compute()
         self.grid.give_birth(self.compute)
 
+        if Screen.list_of_screens is None:
+            Screen.list_of_screens = []
+
         self.list_of_screens.append(self)
 
     def __str__(self) -> str:
@@ -290,11 +313,11 @@ class Screen:
     def delete(self) -> None:
         Screen.list_of_screens.remove(self)
 
-    @staticmethod
-    def create_from_coords(grid: Grid, point1: int, point2: int):
+    @classmethod
+    def create_from_coords(cls: Screen, grid: Grid, point1: int, point2: int) -> Screen:
         matrix = grid.matrix
-        p1 = get_coords(point1,matrix)
 
+        p1 = get_coords(point1,matrix)
         p2 = get_coords(point2,matrix)
 
         colspan = abs(p1[0] - p2[0]) + 1
@@ -306,18 +329,18 @@ class Screen:
    
 
     # Screen transformations ==========================
-    @staticmethod
-    def flip_horizontally():
+    @classmethod
+    def flip_horizontally(cls) -> None:
         """Flips current screen layout horizontally"""
-        for screen in Screen.list_of_screens:
+        for screen in cls.list_of_screens:
             col = screen.col - 1
             newcol = screen.grid.cols - col - screen.colspan
             screen.col = newcol + 1
 
-    @staticmethod
-    def flip_vertically():
+    @classmethod
+    def flip_vertically(cls) -> None:
         """Flips current screen layout vertically"""
-        for screen in Screen.list_of_screens:
+        for screen in cls.list_of_screens:
             row = screen.row - 1
             newrow = screen.grid.rows - row - screen.rowspan
             screen.row = newrow + 1
