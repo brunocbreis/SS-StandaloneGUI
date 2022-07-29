@@ -304,19 +304,23 @@ class Screen:
 
         return Screen(grid,colspan,rowspan,col,row)
    
-   
+
     # Screen transformations ==========================
     @staticmethod
     def flip_horizontally():
         """Flips current screen layout horizontally"""
         for screen in Screen.list_of_screens:
-            screen.col = screen.grid.cols - screen.col
+            col = screen.col - 1
+            newcol = screen.grid.cols - col - screen.colspan
+            screen.col = newcol + 1
 
     @staticmethod
     def flip_vertically():
         """Flips current screen layout vertically"""
         for screen in Screen.list_of_screens:
-            screen.row = screen.grid.rows - screen.row
+            row = screen.row - 1
+            newrow = screen.grid.rows - row - screen.rowspan
+            screen.row = newrow + 1
     # =================================================
 
 

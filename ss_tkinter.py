@@ -293,7 +293,15 @@ def register_2nd_coord_and_add_screen(event: Event):
 
 
 
+# TRANSFORMATION FUNCTIONS
 
+def flip_h(root: Canvas):
+    ss.Screen.flip_horizontally()
+    refresh_grid(root)
+
+def flip_v(root: Canvas):
+    ss.Screen.flip_vertically()
+    refresh_grid(root)
 
 # ACTUAL APP    ==================================
 def main():
@@ -439,6 +447,12 @@ def main():
     )
     clear_all_button.grid(row=14, column = 1,pady=10, columnspan=2)
 
+
+    fliph_button = Button(button_frame_right,text="Flip Horizontally", command=lambda: flip_h(canvas))
+    fliph_button.grid(row=1,column=1,pady=10)
+
+    flipv_button = Button(button_frame_right,text="Flip Vertically", command=lambda: flip_v(canvas))
+    flipv_button.grid(row=2,column=1,pady=10)
 
     # CANVAS SETTINGS
     canvas_entries = {}
