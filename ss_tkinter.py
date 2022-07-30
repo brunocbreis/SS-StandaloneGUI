@@ -415,14 +415,14 @@ def main():
     
     # RENDER BUTTON FRAME WIDGETS
     # the render button
-    render_bttn_img = Image.open('images/btn_render@0.5x.png')
+    render_bttn_img = Image.open('images/btn_render.png')
     render_bttn_img = ImageTk.PhotoImage(render_bttn_img)
 
     render_button = Button(
         render_bttn_frame,
         # height=3,font="Archivo 16", 
         text="Render Fusion Output",
-        cursor="hand2", 
+        cursor="ibeam", 
         borderwidth=0,
         image=render_bttn_img,
         command=lambda: render_for_fusion(
@@ -434,7 +434,7 @@ def main():
         )
 
     render_button = Label(render_bttn_frame,
-        image=render_bttn_img,cursor="hand2",
+        image=render_bttn_img,cursor="pointinghand",
     )
     render_button.bind('<Button-1>',
                 lambda e: render_for_fusion(

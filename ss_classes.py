@@ -1,4 +1,5 @@
 from __future__ import annotations
+from turtle import screensize
 from typing import Callable
 
 
@@ -53,6 +54,9 @@ class Canvas:
         for child in self._children:
             child()
 
+    @property
+    def aspect_ratio(self) -> float:
+        return self.width/self.height
 
 class Margin:
     """Margin object. Values defined in pixels but returned normalized."""
@@ -410,6 +414,39 @@ class Screen:
             return
         self._name = value
 
+    @property
+    def corners(self) -> dict[tuple]:
+        top_left = (self.x - self.width/2, self.y + self.height/2) 
+        top_right = (self.x + self.width/2, self.y + self.height/2)
+        bottom_left = (self.x - self.width/2, self.y - self.height/2) 
+        bottom_right = (self.x + self.width/2, self.y - self.height/2) 
+
+        corners = {
+            'top_left': top_left,
+            'top_right': top_right,
+            'bottom_left': bottom_left,
+            'bottom_right': bottom_right
+        }
+        return corners
+
+    @property
+    def expanded_corners(self) -> dict[tuple]:
+        half_gutter = tuple(g/2 for g in self.grid.gutter)
+        extra_width, extra_height = half_gutter
+
+        top_left = (self.x - self.width/2 - extra_width, self.y + self.height/2 + extra_height) 
+        top_right = (self.x + self.width/2 + extra_width, self.y + self.height/2 + extra_height) 
+        bottom_left = (self.x - self.width/2 - extra_width, self.y - self.height/2 - extra_height)
+        bottom_right = (self.x + self.width/2 - extra_width, self.y - self.height/2 - extra_height) 
+
+        corners = {
+            'top_left': top_left,
+            'top_right': top_right,
+            'bottom_left': bottom_left,
+            'bottom_right': bottom_right
+        }
+        return corners   
+    
     # ================================================
 
     def edit(self, colspan: int, rowspan: int, col: int, row: int) -> None:
@@ -479,6 +516,7 @@ class GridCell(Screen):
             self._col = self._row = 1
         else:
             self._col, self._row = get_coords(index, GridCell.grid.matrix)
+        self.index = index
         
         self.compute()
         self.grid.give_birth(self.compute)
@@ -509,7 +547,7 @@ class GridCell(Screen):
             + margin.bottom
             + (self._row - 1) * (grid.row_height + grid.gutter[1])
         )
-        # y = 1 - y
+        y = y
 
         self.width = grid.col_width
         self.height = grid.row_height
@@ -549,14 +587,18 @@ def test():
 
     print(canvas, margin, grid, sep="\n")
 
-    cells = GridCell.generate_all(grid)
-    print(cells)
-    w1 = GridCell.all_blocks[0].width
+    screen = Screen(grid,5,4,1,2)
+    print(margin.top)
+    print(screen.corners)
 
-    grid.cols = 6
-    w2 = GridCell.all_blocks[0].width
+    # cells = GridCell.generate_all(grid)
+    # print(cells)
+    # w1 = GridCell.all_blocks[0].width
 
-    print(w2/w1)
+    # grid.cols = 6
+    # w2 = GridCell.all_blocks[0].width
+
+    # print(w2/w1)
 
 if __name__ == "__main__":
     test()
