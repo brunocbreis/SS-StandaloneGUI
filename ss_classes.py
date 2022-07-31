@@ -349,20 +349,26 @@ class Screen:
 
     # Screen transformations ==========================
     @classmethod
-    def flip_horizontally(cls) -> None:
+    def flip_horizontally(cls) -> bool:
         """Flips current screen layout horizontally"""
+        if cls.list_of_screens is None:
+            return False
         for screen in cls.list_of_screens:
             col = screen.col - 1
             newcol = screen.grid.cols - col - screen.colspan
             screen.col = newcol + 1
+        return True
 
     @classmethod
-    def flip_vertically(cls) -> None:
+    def flip_vertically(cls) -> bool:
         """Flips current screen layout vertically"""
+        if cls.list_of_screens is None:
+            return False
         for screen in cls.list_of_screens:
             row = screen.row - 1
             newrow = screen.grid.rows - row - screen.rowspan
             screen.row = newrow + 1
+        return True
 
     # =================================================
 

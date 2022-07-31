@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 import tkinter as tk
 from tkinter import Label, ttk
 from tkinter.font import Font
-from turtle import width
 from typing import Callable
 import ss_classes as ss
 from fusion_tool_generator import load_defaults, render_fusion_output, save_preset_for_fusion
@@ -24,7 +23,6 @@ def is_within(coords: tuple[float, float], area: dict[tuple[float, float]]) -> b
         return False
     return True
 
-
 def find_grid_block_within(
     coords: tuple[float, float], grid_blocks: list[GridBlock]
 ) -> GridBlock:
@@ -32,7 +30,6 @@ def find_grid_block_within(
         (block for block in grid_blocks if is_within(coords, block.grid_cell.corners)),
         None,
     )
-
 
 def get_event_coords_normalized(event) -> tuple[float, float]:
     self = event.widget
@@ -42,7 +39,15 @@ def get_event_coords_normalized(event) -> tuple[float, float]:
 def clear_status_bar(cls:ScreenSplitter) -> None:
     cls.after(3500, lambda: cls.status_text.set(""))
 
-# CLASSES ======================================================
+
+
+
+##################################################################################
+#####################           CLASSES       ####################################
+##################################################################################
+
+
+# BLOCKS ========================================================
 class Block(ABC):
     @abstractmethod
     def draw(self) -> None:
@@ -229,6 +234,7 @@ class GridBlock(Block):
         self.canvas.tag_bind(self.tag, sequence=event, func=callable)
 
 
+# SCREEN SPLITTER ========================================================
 class ScreenSplitter(tk.Canvas):
     new_screen_coords: tuple[tuple[float, float], tuple[float, float]] = (
         (0.0, 0.0),
@@ -243,6 +249,10 @@ class ScreenSplitter(tk.Canvas):
     fusion_export: str = None
     selected_screen = None
     status_text = None
+    scale_var: tk.DoubleVar() = None
+    scale_text: tk.StringVar() = None
+    screen_color: str = None
+    fusion_studio: tk.BooleanVar = None
 
     @classmethod
     def on_click(cls, event: tk.Event) -> None:
@@ -268,7 +278,7 @@ class ScreenSplitter(tk.Canvas):
 
     @classmethod
     def on_release(cls, event: tk.Event) -> None:
-        # cls.unselect_screen(event.widget)
+
         if cls.new_screen_coords is None:
             return
         coords = get_event_coords_normalized(event)
@@ -366,41 +376,97 @@ class ScreenSplitter(tk.Canvas):
 
         self.global_refresh((do_width, do_height))
 
+    def flip_h(self, event):
+        if not ss.Screen.flip_horizontally():
+            return
+        self.global_refresh()
+
+    def flip_v(self, event):
+        if not ss.Screen.flip_vertically():
+            return
+        self.global_refresh()
+
+
     # REFRESHING METHODS
     def width_refresh(self, func: Callable):
-        self.ss_grid.canvas.width = func()
+        newset = func()
+        oldset = self.ss_grid.canvas.width
+        if oldset == newset:
+            return
+
+        self.ss_grid.canvas.width = newset
         self.global_refresh((True, False))
 
     def height_refresh(self, func: Callable):
-        self.ss_grid.canvas.height = func()
+        newset = func()
+        oldset = self.ss_grid.canvas.height
+        if oldset == newset:
+            return
+
+        self.ss_grid.canvas.height = newset
         self.global_refresh((False, True))
 
     def top_refresh(self, func: Callable):
-        self.ss_grid.margin.top = func()
+        newset = func()
+        oldset = self.ss_grid.margin._top_px
+        if oldset == newset:
+            return
+
+        self.ss_grid.margin.top = newset
         self.global_refresh()
 
     def left_refresh(self, func: Callable):
-        self.ss_grid.margin.left = func()
+        newset = func()
+        oldset = self.ss_grid.margin._left_px
+        if oldset == newset:
+            return
+
+        self.ss_grid.margin.left = newset
         self.global_refresh()
 
     def bottom_refresh(self, func: Callable):
-        self.ss_grid.margin.bottom = func()
+        newset = func()
+        oldset = self.ss_grid.margin._bottom_px
+        if oldset == newset:
+            return
+
+        self.ss_grid.margin.bottom = newset
         self.global_refresh()
 
     def right_refresh(self, func: Callable):
-        self.ss_grid.margin.right = func()
+        newset = func()
+        oldset = self.ss_grid.margin._right_px
+        if oldset == newset:
+            return
+
+        self.ss_grid.margin.right = newset
         self.global_refresh()
 
     def gutter_refresh(self, func: Callable):
-        self.ss_grid.margin.gutter = func()
+        newset = func()
+        oldset = self.ss_grid.margin._gutter_px
+        if oldset == newset:
+            return
+
+        self.ss_grid.margin.gutter = newset
         self.global_refresh()
 
     def col_refresh(self, func: Callable):
-        self.ss_grid.cols = func()
+        newset = func()
+        oldset = self.ss_grid.cols
+        if oldset == newset:
+            return
+
+        self.ss_grid.cols = newset
         self.global_refresh()
 
     def row_refresh(self, func: Callable):
-        self.ss_grid.rows = func()
+        newset = func()
+        oldset = self.ss_grid.rows
+        if oldset == newset:
+            return
+
+        self.ss_grid.rows = newset
         self.global_refresh()
 
     def global_refresh(
@@ -426,8 +492,8 @@ class ScreenSplitter(tk.Canvas):
         canvas = self.ss_grid.canvas
         aspect_ratio = canvas.aspect_ratio
 
-        max_width = 750
-        max_height = 550
+        max_width = self.max_width
+        max_height = self.max_height
 
         if aspect_ratio > 1:
             canvas_width = max_width
@@ -461,6 +527,8 @@ class ScreenSplitter(tk.Canvas):
         cls.status_text.set("Node tree successfuly copied to clipboard.")
 
 
+
+# RECT TRACKER ========================================================
 class RectTracker:
     def __init__(self, canvas):
         self.canvas = canvas
@@ -495,104 +563,28 @@ class RectTracker:
         self.item = None
 
 
+# COLOR PALETTE =========================================================
+class ColorPalette:
+    root_bg_color = "#282828"
+    canvas_bg_color = "#141414"
+    canvas_block_color = "#282828"
+    canvas_block_hover_color = "#303030"
+    canvas_screen_color = "#0070D4"
+    text_color = "#D0D0D0"
+    entry_bg_color = "#1F1F1F"
+
+
+
+
+
 
 
 # APP =================================================================================
 def main():
+
     root = tk.Tk()
 
 
-    # COLOR PALETTE =========================================================
-    class ColorPalette:
-        root_bg_color = "#282828"
-        canvas_bg_color = "#141414"
-        canvas_block_color = "#282828"
-        canvas_block_hover_color = "#303030"
-        canvas_screen_color = "#0070D4"
-        text_color = "#D0D0D0"
-        entry_bg_color = "#1F1F1F"
-
-
-    # FONT PALETTE ========================================================
-    class FontPalette:
-        main = Font(family="Archivo SemiExpanded Light")
-        small = Font(family="Archivo SemiExpanded Light", size=12)
-
-
-    # ROOT CONFIGS =========================================================
-    root.configure(bg=ColorPalette.root_bg_color)
-
-    root.option_add("*font",FontPalette.main)
-    root.option_add("*foreground", ColorPalette.text_color)
-    root.option_add("*Entry.foreground", ColorPalette.text_color)
-    root.option_add("*Entry.background", ColorPalette.entry_bg_color)
-    root.option_add("*background", ColorPalette.root_bg_color)
-    # root.option_add("*Button.background", ColorPalette.root_bg_color)
-    # root.option_add("*Label.background", ColorPalette.root_bg_color)
-    # root.option_add("*Checkbutton.background", ColorPalette.root_bg_color)
-    root.option_add("*Checkbutton.font", FontPalette.small)
-
-    root.title('SplitScreener')
-    root.resizable(False,False)
-
-
-    # TTK STYLE STUFF =========================
-    estyle = ttk.Style()
-    estyle.element_create("plain.field", "from", "clam")
-    estyle.layout("pad.TEntry",
-                    [('Entry.plain.field', {'children': [(
-                        'Entry.background', {'children': [(
-                            'Entry.padding', {'children': [(
-                                'Entry.textarea', {'sticky': 'nswe'})],
-                        'sticky': 'nswe'})], 'sticky': 'nswe'})],
-                        'border':'0', 'sticky': 'nswe'})])
-    estyle.configure("pad.TEntry",
-                    background=ColorPalette.entry_bg_color, 
-                    foreground=ColorPalette.text_color,
-                    fieldbackground=ColorPalette.entry_bg_color,
-                    padding='20 5 20 5')
-
-
-
-    # SETTING UP THE MAIN TK GRID ======================================================
-    root.columnconfigure(index=1,   weight=1, minsize=200)  # LEFT SIDEBAR
-    root.columnconfigure(index=2,   weight=1, minsize=800)  # MAIN SECTION, THE CREATOR
-    root.columnconfigure(index=3,   weight=1, minsize=200)  # RIGHT SIDEBAR (nothing there yet)
-    root.rowconfigure(   index=1,   weight=3)               # HEADER
-    root.rowconfigure(   index=2,   weight=1)               # MAIN SECTION, THE CREATOR FRAME AND SETTINGS
-    root.rowconfigure(   index=3,   weight=1)               # THE RENDER BUTTON FRAME
-    root.rowconfigure(   index=4,   weight=3)               # FOOTER
-
-
-    # CREATING THE FRAMES
-    header =                tk.Frame(root)
-    button_frame_left =     tk.Frame(root)
-    creator_frame =         tk.Frame(root,width=770,height=575)
-    button_frame_right =    tk.Frame(root) 
-    render_bttn_frame =     tk.Frame(root)
-    footer =                tk.Frame(root)
-
-    # adding them to the grid
-    header.grid(            column=1,   row=1,  columnspan=3)
-    button_frame_left.grid( column=1,   row=2, sticky=tk.E)
-    creator_frame.grid(     column=2,   row=2,  padx=10, pady=10)
-    button_frame_right.grid(column=3,   row=2, ipadx=20)
-    render_bttn_frame.grid( column=2,   row=3)
-    footer.grid(            column=1,   row=4,  columnspan=3)
-
-
-    # APP LOGO
-    # if darkdetect.isDark():
-    #     logo_img = Image.open('images/SS_logo_white.png').resize((173,62), Image.ANTIALIAS)
-    #     logo = ImageTk.PhotoImage(logo_img)
-
-    logo_img = Image.open('images/SS_logo_offwhite.png')#.resize((173,62), Image.Resampling.LANCZOS)
-    logo = ImageTk.PhotoImage(logo_img)
-
-
-    # APP TITLE
-    app_title = tk.Label(header, height=100, justify=tk.CENTER, image=logo)
-    app_title.pack(anchor=tk.S, pady=40)
 
 
     # LOADING SPLITSCREENER DEFAULTS =========================================
@@ -614,20 +606,121 @@ def main():
 
 
 
+    ##################################################################################
+    #####################       ROOT & SETUP      ####################################
+    ##################################################################################
+    # FONT PALETTE ========================================================
+    class FontPalette:
+        main = Font(family="Archivo SemiExpanded Light")
+        small = Font(family="Archivo SemiExpanded Light", size=12)
+    
+    cp = ColorPalette()
+    fp = FontPalette()
+
+
+    # ROOT CONFIGS =========================================================
+    root.configure(bg=cp.root_bg_color)
+    root.option_add("*font",fp.main)
+    root.option_add("*foreground", cp.text_color)
+    root.option_add("*Entry.foreground", cp.text_color)
+    root.option_add("*Entry.background", cp.entry_bg_color)
+    root.option_add("*background", cp.root_bg_color)
+    root.option_add("*Checkbutton.font", fp.small)
+
+    root.title('SplitScreener')
+    # root.resizable(False,False)
+
+
+    # TTK STYLE STUFF =========================
+    estyle = ttk.Style()
+    estyle.element_create("plain.field", "from", "clam")
+    estyle.layout("pad.TEntry",
+                    [('Entry.plain.field', {'children': [(
+                        'Entry.background', {'children': [(
+                            'Entry.padding', {'children': [(
+                                'Entry.textarea', {'sticky': 'nswe'})],
+                        'sticky': 'nswe'})], 'sticky': 'nswe'})],
+                        'border':'0', 'sticky': 'nswe'})])
+    estyle.configure("pad.TEntry",
+                    background=cp.entry_bg_color, 
+                    foreground=cp.text_color,
+                    fieldbackground=cp.entry_bg_color,
+                    padding='20 5 20 5')
+
+
+
+    # SETTING UP THE MAIN TK GRID ======================================================
+    root.columnconfigure(index=1,   weight=1)  # LEFT SIDEBAR
+    root.columnconfigure(index=2,   weight=1)  # MAIN SECTION, THE CREATOR
+    root.columnconfigure(index=3,   weight=1)  # RIGHT SIDEBAR (nothing there yet)
+    root.rowconfigure(   index=1,   weight=3)               # HEADER
+    root.rowconfigure(   index=2,   weight=1)               # MAIN SECTION, THE CREATOR FRAME AND SETTINGS
+    root.rowconfigure(   index=3,   weight=1)               # THE RENDER BUTTON FRAME
+    root.rowconfigure(   index=4,   weight=3)               # FOOTER
+
+
+    # CREATING THE FRAMES
+    header =                tk.Frame(root)
+    button_frame_left =     tk.Frame(root)
+    creator_frame =         tk.Frame(root)
+    button_frame_right =    tk.Frame(root) 
+    render_bttn_frame =     tk.Frame(root)
+    footer =                tk.Frame(root)
+
+    # adding them to the grid
+    header.grid(            column=1,   row=1,  columnspan=3)
+    button_frame_left.grid( column=1,   row=2, sticky=tk.E)
+    creator_frame.grid(     column=2,   row=2,  padx=10, pady=10)
+    button_frame_right.grid(column=3,   row=2, ipadx=20)
+    render_bttn_frame.grid( column=2,   row=3)
+    footer.grid(            column=1,   row=4,  columnspan=3)
+
+
+
+
+    ##################################################################################
+    #####################       HEADER      ##########################################
+    ##################################################################################
+
+    # APP LOGO
+    logo_img = Image.open('images/SS_logo_offwhite.png')
+    logo = ImageTk.PhotoImage(logo_img)
+
+
+    # APP TITLE
+    app_title = tk.Label(header, height=100, justify=tk.CENTER, image=logo)
+    app_title.pack(anchor=tk.S, pady=40)
+
+
+
+    # GETTING SCREEN DIMS
+    pc_screen_width = root.winfo_screenwidth()
+    pc_screen_height = root.winfo_screenheight()
+    print(pc_screen_width,pc_screen_height)
+
+
+
 
     # CREATING WIDGETS =========================================================
     screen_splitter = ScreenSplitter(
-        creator_frame, background=ColorPalette.canvas_bg_color, bd=0, highlightthickness=0, relief="ridge"
+        creator_frame, background=cp.canvas_bg_color, bd=0, highlightthickness=0, relief="ridge"
     )
     ScreenSplitter.ss_grid = ss_grid
 
     ScreenSplitter.scale_var = tk.DoubleVar()
     ScreenSplitter.scale_text = tk.StringVar()
-    ScreenSplitter.screen_color: str = ColorPalette.canvas_screen_color
+    ScreenSplitter.screen_color: str = cp.canvas_screen_color
     ScreenSplitter.fusion_studio: tk.BooleanVar = tk.BooleanVar()
 
+    # ScreenSplitter.max_width = int(round(pc_screen_width/4,0))
+    # ScreenSplitter.max_height = int(round(pc_screen_height/4,0))
+    # ^ at first, but maybe config a min size for root window and then
+    # set these to a variable to allow rescaling
+
+
+
     screen_splitter.update_dims()
-    screen_splitter.grid(padx=20, pady=5)
+    screen_splitter.grid(ipadx=20, pady=5,row=1)
 
 
 
@@ -636,10 +729,10 @@ def main():
     GridBlock.create_all(
         screen_splitter,
         ss_grid,
-        fill=ColorPalette.canvas_block_color,
-        activefill=ColorPalette.canvas_block_hover_color,
-        outline=ColorPalette.canvas_block_color,
-        activeoutline=ColorPalette.canvas_block_color,
+        fill=cp.canvas_block_color,
+        activefill=cp.canvas_block_hover_color,
+        outline=cp.canvas_block_color,
+        activeoutline=cp.canvas_block_color,
         activewidth=1,
     )
     GridBlock.draw_all()
@@ -655,7 +748,7 @@ def main():
 
 
     # SCALE LABEL ====================================================================
-    scale_label = tk.Label(creator_frame, font=FontPalette.small,textvariable=screen_splitter.scale_text, justify=tk.RIGHT, bg=ColorPalette.root_bg_color)
+    scale_label = tk.Label(creator_frame, font=fp.small,textvariable=screen_splitter.scale_text, justify=tk.RIGHT, bg=cp.root_bg_color)
     scale_label.grid(row=2, sticky=tk.NE,  padx=20)
 
     
@@ -710,22 +803,22 @@ def main():
         for key, var in vars.items():
             if key == 'cols' or key == 'rows':
                 key = f'# {key}'
-            label = tk.Label(button_frame_left, text=key.title(), bg=ColorPalette.root_bg_color, justify=tk.LEFT, padx=20)
+            label = tk.Label(button_frame_left, text=key.title(), bg=cp.root_bg_color, justify=tk.LEFT, padx=20)
 
             entry = tk.Entry(
                 button_frame_left,
                 width=8,
                 justify=tk.CENTER,
                 textvariable=var,
-                foreground=ColorPalette.text_color,
+                foreground=cp.text_color,
                 bd=0,
                 relief="flat",
-                bg=ColorPalette.entry_bg_color,
+                bg=cp.entry_bg_color,
                 highlightthickness=1,
-                highlightbackground=ColorPalette.canvas_bg_color,
-                highlightcolor=ColorPalette.canvas_bg_color
+                highlightbackground=cp.canvas_bg_color,
+                highlightcolor=cp.canvas_bg_color
                 # style='pad.TEntry'
-                # border=ColorPalette.root_bg_color
+                # border=cp.root_bg_color
             )
             var_entries[key] = (label,entry)
         return var_entries
@@ -738,9 +831,9 @@ def main():
             if key == 'height' or key == 'gutter':
                 i += 1
             i += 1
-        tk.Label(button_frame_left,height=1,background=ColorPalette.root_bg_color).grid(row=3, pady=3)
-        tk.Label(button_frame_left,height=1,background=ColorPalette.root_bg_color).grid(row=9, pady=3)
-        tk.Label(button_frame_left,height=1,background=ColorPalette.root_bg_color).grid(row=12, pady=3)
+        tk.Label(button_frame_left,height=1,background=cp.root_bg_color).grid(row=3, pady=3)
+        tk.Label(button_frame_left,height=1,background=cp.root_bg_color).grid(row=9, pady=3)
+        tk.Label(button_frame_left,height=1,background=cp.root_bg_color).grid(row=12, pady=3)
         ...
     
     
@@ -780,6 +873,8 @@ def main():
     entries["gutter"][1].bind("<FocusOut>", lambda a: screen_splitter.gutter_refresh(vars["gutter"].get))
     entries["gutter"][1].bind("<KP_Enter>", lambda a: screen_splitter.gutter_refresh(vars["gutter"].get))
 
+
+
     entries["# cols"][1].bind("<Return>", lambda a: screen_splitter.col_refresh(vars["cols"].get))
     entries["# cols"][1].bind("<FocusOut>", lambda a: screen_splitter.col_refresh(vars["cols"].get))
     entries["# cols"][1].bind("<KP_Enter>", lambda a: screen_splitter.col_refresh(vars["cols"].get))
@@ -801,7 +896,7 @@ def main():
     button_frame_right.rowconfigure(index=4,weight=1)
     button_frame_right.rowconfigure(index=5,weight=1)
     button_frame_right.rowconfigure(index=6,weight=1)
-    button_frame_right.option_add("*font",FontPalette.small)
+    button_frame_right.option_add("*font",fp.small)
 
 
     rotate_cw_file = Image.open('images/icn_rotatecw.png')
@@ -822,16 +917,18 @@ def main():
 
     flipv_file = Image.open('images/icn_flipv.png')
     flipv_img = ImageTk.PhotoImage(flipv_file)
-    flipv_icon = tk.Label(button_frame_right, image=flipv_img, justify=tk.RIGHT)
+    flipv_icon = tk.Label(button_frame_right, image=flipv_img, justify=tk.RIGHT, cursor='pointinghand')
     flipv_text = tk.Label(button_frame_right, text="Flip Vertically", justify=tk.LEFT)
+    flipv_icon.bind("<Button-1>",screen_splitter.flip_v)
     
     flipv_icon.grid(column=1,row=3,padx=5,pady=20)
     flipv_text.grid(column=2,row=3,padx=10,sticky=tk.W)
 
     fliph_file = Image.open('images/icn_fliph.png')
     fliph_img = ImageTk.PhotoImage(fliph_file)
-    fliph_icon = tk.Label(button_frame_right, image=fliph_img)
+    fliph_icon = tk.Label(button_frame_right, image=fliph_img, cursor='pointinghand')
     fliph_text = tk.Label(button_frame_right, text="Flip Horizontally", justify=tk.LEFT)
+    fliph_icon.bind("<Button-1>",screen_splitter.flip_h)
     
     fliph_icon.grid(column=1,row=4,padx=5,pady=20)
     fliph_text.grid(column=2,row=4,padx=10,sticky=tk.W)
