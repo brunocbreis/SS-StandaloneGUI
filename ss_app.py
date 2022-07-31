@@ -1,8 +1,9 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 import tkinter as tk
-from tkinter import ttk
+from tkinter import Label, ttk
 from tkinter.font import Font
+from turtle import width
 from typing import Callable
 import ss_classes as ss
 from fusion_tool_generator import load_defaults, render_fusion_output, save_preset_for_fusion
@@ -38,7 +39,8 @@ def get_event_coords_normalized(event) -> tuple[float, float]:
     coords = (event.x / self.winfo_width(), 1- event.y / self.winfo_height())
     return coords
 
-
+def clear_status_bar(cls:ScreenSplitter) -> None:
+    cls.after(3500, lambda: cls.status_text.set(""))
 
 # CLASSES ======================================================
 class Block(ABC):
@@ -96,7 +98,7 @@ class ScreenBlock(Block):
         self.y0 = (y - screen.height / 2) * canvas_height
         self.x1 = self.x0 + screen.width * canvas_width
         self.y1 = self.y0 + screen.height * canvas_height
-        print(self.screen.get_values())
+
 
     @classmethod
     def draw_all(cls):
@@ -148,7 +150,7 @@ class GridBlock(Block):
         self.y0 = (y - cell.height / 2) * canvas_height
         self.x1 = self.x0 + cell.width * canvas_width
         self.y1 = self.y0 + cell.height * canvas_height
-        print(self.y0)
+
 
     def draw(self):
         self.rect = self.canvas.create_rectangle(
@@ -240,6 +242,7 @@ class ScreenSplitter(tk.Canvas):
     max_height = 550
     fusion_export: str = None
     selected_screen = None
+    status_text = None
 
     @classmethod
     def on_click(cls, event: tk.Event) -> None:
@@ -417,7 +420,7 @@ class ScreenSplitter(tk.Canvas):
             return
         for screen in self.user_screens:
             self.draw_screen(screen)
-            self.tag_all_screens_for_selection()
+            # self.tag_all_screens_for_selection()
 
     def compute_dims(self) -> tuple[int]:
         canvas = self.ss_grid.canvas
@@ -453,6 +456,10 @@ class ScreenSplitter(tk.Canvas):
             screen_values.append(screen.get_values())
         cls.fusion_export = render_fusion_output(screen_values,cls.ss_grid.canvas.resolution,cls.fusion_studio.get())
         pyperclip.copy(cls.fusion_export)
+        if cls.status_text is None:
+            cls.status_text = tk.StringVar()
+        cls.status_text.set("Node tree successfuly copied to clipboard.")
+
 
 class RectTracker:
     def __init__(self, canvas):
@@ -518,6 +525,7 @@ def main():
     root.option_add("*font",FontPalette.main)
     root.option_add("*foreground", ColorPalette.text_color)
     root.option_add("*Entry.foreground", ColorPalette.text_color)
+    root.option_add("*Entry.background", ColorPalette.entry_bg_color)
     root.option_add("*background", ColorPalette.root_bg_color)
     # root.option_add("*Button.background", ColorPalette.root_bg_color)
     # root.option_add("*Label.background", ColorPalette.root_bg_color)
@@ -559,16 +567,16 @@ def main():
     # CREATING THE FRAMES
     header =                tk.Frame(root)
     button_frame_left =     tk.Frame(root)
-    creator_frame =         tk.Frame(root)
-    button_frame_right =    tk.Frame(root) # useless atm
+    creator_frame =         tk.Frame(root,width=770,height=575)
+    button_frame_right =    tk.Frame(root) 
     render_bttn_frame =     tk.Frame(root)
     footer =                tk.Frame(root)
 
     # adding them to the grid
     header.grid(            column=1,   row=1,  columnspan=3)
-    button_frame_left.grid( column=1,   row=2, )
+    button_frame_left.grid( column=1,   row=2, sticky=tk.E)
     creator_frame.grid(     column=2,   row=2,  padx=10, pady=10)
-    button_frame_right.grid(column=3,   row=2)
+    button_frame_right.grid(column=3,   row=2, ipadx=20)
     render_bttn_frame.grid( column=2,   row=3)
     footer.grid(            column=1,   row=4,  columnspan=3)
 
@@ -584,7 +592,7 @@ def main():
 
     # APP TITLE
     app_title = tk.Label(header, height=100, justify=tk.CENTER, image=logo)
-    app_title.pack(anchor=tk.S, pady=50)
+    app_title.pack(anchor=tk.S, pady=40)
 
 
     # LOADING SPLITSCREENER DEFAULTS =========================================
@@ -621,9 +629,7 @@ def main():
     screen_splitter.update_dims()
     screen_splitter.grid(padx=20, pady=5)
 
-    # SCALE LABEL ====================================================================
-    scale_label = tk.Label(creator_frame, textvariable=screen_splitter.scale_text, justify=tk.RIGHT, bg=ColorPalette.root_bg_color)
-    scale_label.grid(row=2, sticky=tk.NE,  padx=20)
+
 
 
     # RENDERING GRID BLOCKS ======================================================
@@ -638,9 +644,26 @@ def main():
     )
     GridBlock.draw_all()
 
+
+
+
+   # BINDING FOR CLICK AND DRAG SCREEN ADD =======================
+    screen_splitter.bind("<Button-1>", screen_splitter.on_click)
+    screen_splitter.bind("<ButtonRelease-1>", screen_splitter.on_release)
+
+
+
+
+    # SCALE LABEL ====================================================================
+    scale_label = tk.Label(creator_frame, font=FontPalette.small,textvariable=screen_splitter.scale_text, justify=tk.RIGHT, bg=ColorPalette.root_bg_color)
+    scale_label.grid(row=2, sticky=tk.NE,  padx=20)
+
     
 
-
+    ##################################################################################
+    ##################### BUTTON LEFT FRAME ##########################################
+    ##################################################################################
+    
     # TKINTER VARIABLES FOR USER GRID SETTINGS ========================================
     vars = {}
 
@@ -656,42 +679,28 @@ def main():
 
     # MARGIN =======================
     vars["top"] = tk.IntVar(value=defaults["top"])
-    vars["top"].trace_add(
-        "write", lambda a, b, c: screen_splitter.top_refresh(vars["top"].get)
-    )
+    # vars["top"].trace_add("write", lambda a, b, c: screen_splitter.top_refresh(vars["top"].get))
 
     vars["left"] = tk.IntVar(value=defaults["left"])
-    vars["left"].trace_add(
-        "write", lambda a, b, c: screen_splitter.left_refresh(vars["left"].get)
-    )
+    # vars["left"].trace_add("write", lambda a, b, c: screen_splitter.left_refresh(vars["left"].get))
 
     vars["bottom"] = tk.IntVar(value=defaults["bottom"])
-    vars["bottom"].trace_add(
-        "write", lambda a, b, c: screen_splitter.bottom_refresh(vars["bottom"].get)
-    )
+    # vars["bottom"].trace_add("write", lambda a, b, c: screen_splitter.bottom_refresh(vars["bottom"].get))
 
     vars["right"] = tk.IntVar(value=defaults["right"])
-    vars["right"].trace_add(
-        "write", lambda a, b, c: screen_splitter.right_refresh(vars["right"].get)
-    )
+    # vars["right"].trace_add("write", lambda a, b, c: screen_splitter.right_refresh(vars["right"].get) )
 
     vars["gutter"] = tk.IntVar(value=defaults["gutter"])
-    vars["gutter"].trace_add(
-        "write", lambda a, b, c: screen_splitter.gutter_refresh(vars["gutter"].get)
-    )
+    # vars["gutter"].trace_add("write", lambda a, b, c: screen_splitter.gutter_refresh(vars["gutter"].get))
 
 
 
     # GRID =======================
     vars["cols"] = tk.IntVar(value=defaults["cols"])
-    vars["cols"].trace_add(
-        "write", lambda a, b, c: screen_splitter.col_refresh(vars["cols"].get)
-    )
+    # vars["cols"].trace_add("write", lambda a, b, c: screen_splitter.col_refresh(vars["cols"].get))
 
     vars["rows"] = tk.IntVar(value=defaults["rows"])
-    vars["rows"].trace_add(
-        "write", lambda a, b, c: screen_splitter.row_refresh(vars["rows"].get)
-    )
+    # vars["rows"].trace_add( "write", lambda a, b, c: screen_splitter.row_refresh(vars["rows"].get) )
 
 
 
@@ -699,19 +708,23 @@ def main():
     def mk_entries(root: tk.Frame, vars: dict[str, tk.IntVar]):
         var_entries = {}
         for key, var in vars.items():
+            if key == 'cols' or key == 'rows':
+                key = f'# {key}'
             label = tk.Label(button_frame_left, text=key.title(), bg=ColorPalette.root_bg_color, justify=tk.LEFT, padx=20)
 
-            entry = ttk.Entry(
+            entry = tk.Entry(
                 button_frame_left,
-                width=5,
+                width=8,
                 justify=tk.CENTER,
                 textvariable=var,
                 foreground=ColorPalette.text_color,
-                # bd=0,
-                # relief="flat",
-                # bg=ColorPalette.entry_bg_color,
-                # highlightthickness=1,
-                style='pad.TEntry'
+                bd=0,
+                relief="flat",
+                bg=ColorPalette.entry_bg_color,
+                highlightthickness=1,
+                highlightbackground=ColorPalette.canvas_bg_color,
+                highlightcolor=ColorPalette.canvas_bg_color
+                # style='pad.TEntry'
                 # border=ColorPalette.root_bg_color
             )
             var_entries[key] = (label,entry)
@@ -721,56 +734,130 @@ def main():
         i = 1
         for key, tuple in entries.items():
             tuple[0].grid(column=1,row=i,padx=10,pady=10,sticky=tk.W)
-            tuple[1].grid(column=2,row=i,padx=10)
-            if key == 'height' or key == 'right':
+            tuple[1].grid(column=2,row=i,padx=10,ipady=5)
+            if key == 'height' or key == 'gutter':
                 i += 1
             i += 1
         tk.Label(button_frame_left,height=1,background=ColorPalette.root_bg_color).grid(row=3, pady=3)
-        tk.Label(button_frame_left,height=1,background=ColorPalette.root_bg_color).grid(row=8, pady=3)
+        tk.Label(button_frame_left,height=1,background=ColorPalette.root_bg_color).grid(row=9, pady=3)
+        tk.Label(button_frame_left,height=1,background=ColorPalette.root_bg_color).grid(row=12, pady=3)
         ...
     
     
     entries: dict[str,tuple[tk.Label,tk.Entry]] = mk_entries(root, vars)
     grid_entries(entries)
 
-    entries["width"][1].bind(
-        "<Return>", lambda a: screen_splitter.width_refresh(vars["width"].get)
-    )
-    entries["width"][1].bind(
-        "<Tab>", lambda a: screen_splitter.width_refresh(vars["width"].get)
-    )
-    entries["width"][1].bind(
-        "<FocusOut>", lambda a: screen_splitter.width_refresh(vars["width"].get)
-    )
-    entries["width"][1].bind(
-        "<KP_Enter>", lambda a: screen_splitter.width_refresh(vars["width"].get)
-    )
-
-    entries["height"][1].bind(
-        "<Return>", lambda a: screen_splitter.height_refresh(vars["height"].get)
-    )
-    entries["height"][1].bind(
-        "<Tab>", lambda a: screen_splitter.height_refresh(vars["height"].get)
-    )
-    entries["height"][1].bind(
-        "<FocusOut>", lambda a: screen_splitter.height_refresh(vars["height"].get)
-    )
-    entries["height"][1].bind(
-        "<KP_Enter>", lambda a: screen_splitter.height_refresh(vars["height"].get)
-    )
 
 
 
+    entries["width"][1].bind("<Return>", lambda a: screen_splitter.width_refresh(vars["width"].get))
+    entries["width"][1].bind("<FocusOut>", lambda a: screen_splitter.width_refresh(vars["width"].get))
+    entries["width"][1].bind("<KP_Enter>", lambda a: screen_splitter.width_refresh(vars["width"].get))
 
-    # BINDING FOR CLICK AND DRAG SCREEN ADD =======================
-    screen_splitter.bind("<Button-1>", screen_splitter.on_click)
-    screen_splitter.bind("<ButtonRelease-1>", screen_splitter.on_release)
+    entries["height"][1].bind("<Return>", lambda a: screen_splitter.height_refresh(vars["height"].get))
+    entries["height"][1].bind("<FocusOut>", lambda a: screen_splitter.height_refresh(vars["height"].get))
+    entries["height"][1].bind("<KP_Enter>", lambda a: screen_splitter.height_refresh(vars["height"].get))
 
+
+
+    entries["top"][1].bind("<Return>", lambda a: screen_splitter.top_refresh(vars["top"].get))
+    entries["top"][1].bind("<FocusOut>", lambda a: screen_splitter.top_refresh(vars["top"].get))
+    entries["top"][1].bind("<KP_Enter>", lambda a: screen_splitter.top_refresh(vars["top"].get))
+
+    entries["left"][1].bind("<Return>", lambda a: screen_splitter.left_refresh(vars["left"].get))
+    entries["left"][1].bind("<FocusOut>", lambda a: screen_splitter.left_refresh(vars["left"].get))
+    entries["left"][1].bind("<KP_Enter>", lambda a: screen_splitter.left_refresh(vars["left"].get))
+
+    entries["bottom"][1].bind("<Return>", lambda a: screen_splitter.bottom_refresh(vars["bottom"].get))
+    entries["bottom"][1].bind("<FocusOut>", lambda a: screen_splitter.bottom_refresh(vars["bottom"].get))
+    entries["bottom"][1].bind("<KP_Enter>", lambda a: screen_splitter.bottom_refresh(vars["bottom"].get))
+
+    entries["right"][1].bind("<Return>", lambda a: screen_splitter.right_refresh(vars["right"].get))
+    entries["right"][1].bind("<FocusOut>", lambda a: screen_splitter.right_refresh(vars["right"].get))
+    entries["right"][1].bind("<KP_Enter>", lambda a: screen_splitter.right_refresh(vars["right"].get))
+
+    entries["gutter"][1].bind("<Return>", lambda a: screen_splitter.gutter_refresh(vars["gutter"].get))
+    entries["gutter"][1].bind("<FocusOut>", lambda a: screen_splitter.gutter_refresh(vars["gutter"].get))
+    entries["gutter"][1].bind("<KP_Enter>", lambda a: screen_splitter.gutter_refresh(vars["gutter"].get))
+
+    entries["# cols"][1].bind("<Return>", lambda a: screen_splitter.col_refresh(vars["cols"].get))
+    entries["# cols"][1].bind("<FocusOut>", lambda a: screen_splitter.col_refresh(vars["cols"].get))
+    entries["# cols"][1].bind("<KP_Enter>", lambda a: screen_splitter.col_refresh(vars["cols"].get))
+
+    entries["# rows"][1].bind("<Return>", lambda a: screen_splitter.row_refresh(vars["rows"].get))
+    entries["# rows"][1].bind("<FocusOut>", lambda a: screen_splitter.row_refresh(vars["rows"].get))
+    entries["# rows"][1].bind("<KP_Enter>", lambda a: screen_splitter.row_refresh(vars["rows"].get))
+
+
+    ##################################################################################
+    ##################### BUTTON RIGHT FRAME #########################################
+    ##################################################################################
+
+    button_frame_right.columnconfigure(index=1,weight=1)
+    button_frame_right.columnconfigure(index=2,weight=1)
+    button_frame_right.rowconfigure(index=1,weight=1)
+    button_frame_right.rowconfigure(index=2,weight=1)
+    button_frame_right.rowconfigure(index=3,weight=1)
+    button_frame_right.rowconfigure(index=4,weight=1)
+    button_frame_right.rowconfigure(index=5,weight=1)
+    button_frame_right.rowconfigure(index=6,weight=1)
+    button_frame_right.option_add("*font",FontPalette.small)
+
+
+    rotate_cw_file = Image.open('images/icn_rotatecw.png')
+    rotate_cw_img = ImageTk.PhotoImage(rotate_cw_file)
+    rotate_cw_icon = tk.Label(button_frame_right, image=rotate_cw_img)
+    rotate_cw_text = tk.Label(button_frame_right, text="Rotate Clockwise", justify=tk.LEFT)
     
+    rotate_cw_icon.grid(column=1,row=1,padx=5,pady=20)
+    rotate_cw_text.grid(column=2,row=1,padx=10,sticky=tk.W)
+
+    rotate_ccw_file = Image.open('images/icn_rotateccw.png')
+    rotate_ccw_img = ImageTk.PhotoImage(rotate_ccw_file)
+    rotate_ccw_icon = tk.Label(button_frame_right, image=rotate_ccw_img)
+    rotate_ccw_text = tk.Label(button_frame_right, text="Rotate\nCounterclockwise", justify=tk.LEFT)
     
-    # RENDER BUTTON FRAME WIDGETS
+    rotate_ccw_icon.grid(column=1,row=2,padx=5,pady=20)
+    rotate_ccw_text.grid(column=2,row=2,padx=10,sticky=tk.W)
+
+    flipv_file = Image.open('images/icn_flipv.png')
+    flipv_img = ImageTk.PhotoImage(flipv_file)
+    flipv_icon = tk.Label(button_frame_right, image=flipv_img, justify=tk.RIGHT)
+    flipv_text = tk.Label(button_frame_right, text="Flip Vertically", justify=tk.LEFT)
+    
+    flipv_icon.grid(column=1,row=3,padx=5,pady=20)
+    flipv_text.grid(column=2,row=3,padx=10,sticky=tk.W)
+
+    fliph_file = Image.open('images/icn_fliph.png')
+    fliph_img = ImageTk.PhotoImage(fliph_file)
+    fliph_icon = tk.Label(button_frame_right, image=fliph_img)
+    fliph_text = tk.Label(button_frame_right, text="Flip Horizontally", justify=tk.LEFT)
+    
+    fliph_icon.grid(column=1,row=4,padx=5,pady=20)
+    fliph_text.grid(column=2,row=4,padx=10,sticky=tk.W)
+
+
+
+    delete_file = Image.open('images/icn_delete.png')
+    delete_img = ImageTk.PhotoImage(delete_file)
+
+    delete_icon = tk.Label(button_frame_right, image=delete_img)
+    delete_text = tk.Label(button_frame_right, text="Delete all Screens", justify=tk.LEFT)
+    
+    delete_icon.grid(column=1,row=5,padx=10,pady=20)
+    delete_text.grid(column=2,row=5,padx=10,sticky=tk.W)
+
+
+    Label(button_frame_right,height=1).grid(row=6,columnspan=2)
+
+
+    ##################################################################################
+    ##################### RENDER BUTTON AND FOOTER ###################################
+    ##################################################################################
+    
+    # RENDER BUTTON FRAME WIDGETS ================================
     # the render button
-    render_bttn_img = Image.open('images/btn_render.png')
+    render_bttn_img = Image.open('images/btn_render_flatter.png')
     render_bttn_img = ImageTk.PhotoImage(render_bttn_img)
 
     render_button = tk.Button(
@@ -786,6 +873,7 @@ def main():
     )
     render_button.bind('<Button-1>', screen_splitter.export_for_fusion)
 
+
     # fusion studio checkbox
     fu_studio_checkbox = tk.Checkbutton(
         render_bttn_frame,
@@ -798,12 +886,17 @@ def main():
 
     # gridding...
     render_button.grid(     column=1, row=1, sticky=tk.N, pady=10)
-    fu_studio_checkbox.grid(column=1, row=2, sticky=tk.N)
+    # fu_studio_checkbox.grid(column=1, row=2, sticky=tk.N)
 
 
-    # FOOTER FRAME WIDGET
-    status_bar_text = tk.StringVar()
-    status_bar = tk.Label(footer, textvariable=status_bar_text)
+
+
+
+
+    # FOOTER FRAME WIDGET ================================================
+    ScreenSplitter.status_text = tk.StringVar()
+    ScreenSplitter.status_text.trace_add('write',lambda a,b,c: clear_status_bar(screen_splitter))
+    status_bar = tk.Label(footer, textvariable=ScreenSplitter.status_text)
 
     status_bar.pack(pady=25)
     

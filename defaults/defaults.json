@@ -4,11 +4,11 @@
         "height":   1080
     }, 
     "margin": {
-        "top":      15, 
-        "left":     15, 
-        "bottom":   15, 
-        "right":    15,
-        "gutter":   15
+        "top":      25, 
+        "left":     25, 
+        "bottom":   25, 
+        "right":    25,
+        "gutter":   25
     }, 
     "grid": {
         "cols":     12,
