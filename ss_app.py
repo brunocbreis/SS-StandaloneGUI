@@ -4,7 +4,6 @@ from re import S
 import tkinter as tk
 from tkinter import Label, ttk
 from tkinter.font import Font
-from turtle import window_height
 from typing import Callable
 import ss_classes as ss
 from fusion_tool_generator import load_defaults, render_fusion_output, save_preset_for_fusion
@@ -244,6 +243,7 @@ class ScreenSplitter(tk.Canvas):
     )
     new_screen_indexes: tuple[int, int] = (0, 0)
     user_screens: list[ss.Screen] = None
+    user_screen_blocks: list = None
     ss_grid: ss.Grid = None
     grid_blocks: list[GridBlock] = None
     max_width = 750
@@ -254,14 +254,15 @@ class ScreenSplitter(tk.Canvas):
     scale_var: tk.DoubleVar() = None
     scale_text: tk.StringVar() = None
     screen_color: str = None
+    screen_color_pre_delete: str = None
     fusion_studio: tk.BooleanVar = None
     vars: dict[str,tk.IntVar] = None
     entries: dict[str,tk.Entry] = None
 
+    user_wants_to_delete = True
+
     @classmethod
     def on_click(cls, event: tk.Event) -> None:
-        
-
         self = event.widget
         
         item = self.find_closest(event.x,event.y)
@@ -305,12 +306,11 @@ class ScreenSplitter(tk.Canvas):
             ScreenSplitter.ss_grid, *ScreenSplitter.new_screen_indexes
         )
 
+        self.draw_screen(new_screen)
         if ScreenSplitter.user_screens is None:
             ScreenSplitter.user_screens = []
-        ScreenSplitter.user_screens.append(new_screen)
-        print(ScreenSplitter.user_screens)
-
-        self.draw_screen(new_screen)
+        
+        self.user_screens.append(new_screen)
 
     def draw_screen(self, screen: ss.Screen) -> None:
         new_screen_block = ScreenBlock(
@@ -321,37 +321,46 @@ class ScreenSplitter(tk.Canvas):
             tag="screen",
         )
         new_screen_block.draw()
-        self.tag_bind("screen","<ButtonRelease-1>",self.select_screen)
-
-
-
-    def deselect_screen(self, event):
         
-        item = self.find_closest(event.x,event.y)
-        self.itemconfig(item,width=0)
-        self.tag_bind("screen","<ButtonRelease-1>",self.select_screen)
+        id = new_screen_block.rect 
+        screen.id = id
 
-        ...
+        self.tag_bind(id, "<Button-2>", self.pre_delete_screen)
+        self.tag_bind(id, "<Button-2> <Leave>", lambda e: self.cancel_deletion(id=id))
+        self.tag_bind(id,"<Button-2> <ButtonRelease-2>",self.delete_screen)
+
+
+    def pre_delete_screen(self, event: tk.Event) -> None:
+        id = self.find_closest(event.x, event.y)[0]
+        self.itemconfig(id,fill=self.screen_color_pre_delete,outline=self.screen_color_pre_delete)
+
+    def cancel_deletion(self=None,event: tk.Event=None, id=None) -> None:
+        self.user_wants_to_delete = False
+        self.itemconfig(id,fill=self.screen_color,outline=self.screen_color)
+        
+
+    def delete_screen(self, event: tk.Event):
+        if not self.user_wants_to_delete:
+            self.user_wants_to_delete = True
+            return "break"
+        
+        canvas: tk.Canvas = event.widget
+        screen_rect_id = canvas.find_closest(event.x, event.y)[0]
+        self.delete(screen_rect_id)
+
+        to_delete = [screen for screen in self.user_screens if screen.id == screen_rect_id]
+        self.user_screens.remove(*to_delete)
+        self.user_wants_to_delete = True
+        
 
     def select_screen(self, event: tk.Event):
-        if self.selected_screen is not None:
-            self.selected_screen = None
-
-        item = self.find_closest(event.x,event.y)
-        self.selected_screen = item
-
-        print("selected one screen.")
-        print(self.selected_screen)
-
-        self.mark_selected()
         ...
 
     def mark_selected(self):
-        self.itemconfig("selected", outline=self.screen_color)
-        self.itemconfig(self.selected_screen, width=1, outline="white", tag="selected")
-        self.tag_bind("screen","<ButtonRelease-1>",self.select_screen)
+        ...
 
-
+    def deselect_screen(self, event):
+        ...
 
     def global_set(self, **kwargs: dict[str, int]) -> None:
         do_width, do_height = False, False
@@ -381,7 +390,6 @@ class ScreenSplitter(tk.Canvas):
         self.global_refresh((do_width, do_height))
 
 
-
     def link_margins(self, event: tk.Event):
         lbr = {k: self.entries[k][1] for k in ('left', 'bottom', 'right')}
         for mg in lbr.values():
@@ -409,8 +417,6 @@ class ScreenSplitter(tk.Canvas):
         # self.global_refresh()
         self.update_all_vars()
         
-
-
 
     def unlink_margins(self, event):
         lbr = {k: self.entries[k][1] for k in ('left', 'bottom', 'right')}
@@ -643,11 +649,11 @@ class ScreenSplitter(tk.Canvas):
 
 # RECT TRACKER ========================================================
 class RectTracker:
-    def __init__(self, canvas):
+    def __init__(self, canvas: tk.Canvas):
         self.canvas = canvas
         self.item = None
 
-    def draw(self, start, end, **opts):
+    def draw(self, start: list[int,int], end: list[int,int], **opts):
         """Draw the rectangle"""
         return self.canvas.create_rectangle(*(list(start) + list(end)), **opts)
 
@@ -660,7 +666,7 @@ class RectTracker:
 
         self.rectopts = opts
 
-    def __update(self, event):
+    def __update(self, event: tk.Event):
         if not self.start:
             self.start = [event.x, event.y]
             return
@@ -670,7 +676,7 @@ class RectTracker:
         self.item = self.draw(self.start, (event.x, event.y), **self.rectopts)
         # self._command(self.start, (event.x, event.y))
 
-    def __stop(self, event):
+    def __stop(self, event: tk.Event):
         self.start = None
         self.canvas.delete(self.item)
         self.item = None
@@ -686,9 +692,27 @@ class ColorPalette:
     text_color = "#D0D0D0"
     entry_bg_color = "#1F1F1F"
     text_darker_color = "#A3A3A3"
+    canvas_screen_color_pre_delete = "#193470"
 
 
+class ImgPalette:
+    # right column icons
+    icn_rotate_cw = 'images/icn_rotatecw.png'
+    icn_rotate_ccw = 'images/icn_rotateccw.png'
+    icn_flip_v = 'images/icn_flipv.png'
+    icn_flip_h = 'images/icn_fliph.png'
+    icn_delete_all = 'images/icn_delete.png'
 
+    # app logo
+    app_logo = 'images/ss_logo_offwhite.png'
+
+    # render button
+    btn_render = 'images/render_button.png'
+
+    # link bracket
+    icn_lbracket_top = 'images/lbracket1.png'
+    icn_lbracket_bottom = 'images/lbracket2.png'
+    icn_link = 'images/link.png'
 
 
 
@@ -697,7 +721,12 @@ class ColorPalette:
 def main():
 
     root = tk.Tk()
+    root.tk.call('tk', 'scaling', 1.0)
 
+    # FONT PALETTE ========================================================
+    class FontPalette:
+        main = Font(family="Archivo SemiExpanded Light")
+        small = Font(family="Archivo SemiExpanded Light", size=12)
 
 
 
@@ -723,13 +752,11 @@ def main():
     ##################################################################################
     #####################       ROOT & SETUP      ####################################
     ##################################################################################
-    # FONT PALETTE ========================================================
-    class FontPalette:
-        main = Font(family="Archivo SemiExpanded Light")
-        small = Font(family="Archivo SemiExpanded Light", size=12)
+    
     
     cp = ColorPalette()
     fp = FontPalette()
+    ip = ImgPalette()
 
 
 
@@ -739,35 +766,20 @@ def main():
     root.option_add("*foreground", cp.text_color)
     root.option_add("*Entry.foreground", cp.text_color)
     root.option_add("*Entry.background", cp.entry_bg_color)
+    root.option_add("*Entry.disabledbackground", cp.text_darker_color)
     root.option_add("*background", cp.root_bg_color)
     root.option_add("*Checkbutton.font", fp.small)
-
+    root.minsize(1260,740)
     root.title('SplitScreener 1.0')
     # root.resizable(False,False)
 
 
-    # TTK STYLE STUFF =========================
-    estyle = ttk.Style()
-    estyle.element_create("plain.field", "from", "clam")
-    estyle.layout("pad.TEntry",
-                    [('Entry.plain.field', {'children': [(
-                        'Entry.background', {'children': [(
-                            'Entry.padding', {'children': [(
-                                'Entry.textarea', {'sticky': 'nswe'})],
-                        'sticky': 'nswe'})], 'sticky': 'nswe'})],
-                        'border':'0', 'sticky': 'nswe'})])
-    estyle.configure("pad.TEntry",
-                    background=cp.entry_bg_color, 
-                    foreground=cp.text_color,
-                    fieldbackground=cp.entry_bg_color,
-                    padding='20 5 20 5')
-
 
 
     # SETTING UP THE MAIN TK GRID ======================================================
-    root.columnconfigure(index=1,   weight=1)  # LEFT SIDEBAR
-    root.columnconfigure(index=2,   weight=1)  # MAIN SECTION, THE CREATOR
-    root.columnconfigure(index=3,   weight=1)  # RIGHT SIDEBAR (nothing there yet)
+    root.columnconfigure(index=1,   weight=1, minsize=220)  # LEFT SIDEBAR
+    root.columnconfigure(index=2,   weight=1, minsize=820)  # MAIN SECTION, THE CREATOR
+    root.columnconfigure(index=3,   weight=1, minsize=220)  # RIGHT SIDEBAR (nothing there yet)
     root.rowconfigure(   index=1,   weight=3)               # HEADER
     root.rowconfigure(   index=2,   weight=1)               # MAIN SECTION, THE CREATOR FRAME AND SETTINGS
     root.rowconfigure(   index=3,   weight=1)               # THE RENDER BUTTON FRAME
@@ -784,7 +796,7 @@ def main():
 
     # adding them to the grid
     header.grid(            column=1,   row=1,  columnspan=3)
-    button_frame_left.grid( column=1,   row=2, sticky=tk.E)
+    button_frame_left.grid( column=1,   row=2)
     creator_frame.grid(     column=2,   row=2,  padx=10, pady=10)
     button_frame_right.grid(column=3,   row=2, ipadx=20)
     render_bttn_frame.grid( column=2,   row=3)
@@ -798,8 +810,7 @@ def main():
     ##################################################################################
 
     # APP LOGO
-    logo_img = Image.open('images/ss_logo_spaced.png')
-    logo = ImageTk.PhotoImage(logo_img)
+    logo = ImageTk.PhotoImage(file=ip.app_logo)
 
 
     # APP TITLE
@@ -811,10 +822,12 @@ def main():
     # GETTING SCREEN DIMS
     pc_screen_width = root.winfo_screenwidth()
     pc_screen_height = root.winfo_screenheight()
+    screen_center = (pc_screen_width/2,pc_screen_height/2)
+
     root.update()
-    window_width = root.winfo_screenwidth
-    window_height = root.winfo_screenheight()
-    print(pc_screen_width,pc_screen_height, window_width, window_height)
+    window_height = root.winfo_height()
+    # print(window_height)
+    
 
 
 
@@ -828,6 +841,7 @@ def main():
     ScreenSplitter.scale_var = tk.DoubleVar()
     ScreenSplitter.scale_text = tk.StringVar()
     ScreenSplitter.screen_color: str = cp.canvas_screen_color
+    ScreenSplitter.screen_color_pre_delete = cp.canvas_screen_color_pre_delete
     ScreenSplitter.fusion_studio: tk.BooleanVar = tk.BooleanVar()
 
     # ScreenSplitter.max_width = int(round(pc_screen_width/4,0))
@@ -881,58 +895,44 @@ def main():
 
     # CANVAS =======================
     vars["width"] = tk.IntVar(value=defaults["width"])
-    # vars['width'].trace_add('write', lambda a, b, c: screen_splitter.width_refresh(vars['width'].get))
 
     vars["height"] = tk.IntVar(value=defaults["height"])
-    # vars['height'].trace_add('write', lambda a, b, c: screen_splitter.height_refresh(vars['height'].get))
-
 
 
     # MARGIN =======================
     vars["top"] = tk.IntVar(value=defaults["top"])
-    # vars["top"].trace_add("write", lambda a, b, c: screen_splitter.top_refresh(vars["top"].get))
 
     vars["left"] = tk.IntVar(value=defaults["left"])
-    # vars["left"].trace_add("write", lambda a, b, c: screen_splitter.left_refresh(vars["left"].get))
-
+    
     vars["bottom"] = tk.IntVar(value=defaults["bottom"])
-    # vars["bottom"].trace_add("write", lambda a, b, c: screen_splitter.bottom_refresh(vars["bottom"].get))
-
+    
     vars["right"] = tk.IntVar(value=defaults["right"])
-    # vars["right"].trace_add("write", lambda a, b, c: screen_splitter.right_refresh(vars["right"].get) )
-
+    
     vars["gutter"] = tk.IntVar(value=defaults["gutter"])
-    # vars["gutter"].trace_add("write", lambda a, b, c: screen_splitter.gutter_refresh(vars["gutter"].get))
-
-
+    
 
     # GRID =======================
     vars["cols"] = tk.IntVar(value=defaults["cols"])
-    # vars["cols"].trace_add("write", lambda a, b, c: screen_splitter.col_refresh(vars["cols"].get))
 
     vars["rows"] = tk.IntVar(value=defaults["rows"])
-    # vars["rows"].trace_add( "write", lambda a, b, c: screen_splitter.row_refresh(vars["rows"].get) )
 
     ScreenSplitter.vars = vars
 
 
-    lbracket_top_image = ImageTk.PhotoImage(file='images/lbracket1.png')
+    lbracket_top_image = ImageTk.PhotoImage(file=ip.icn_lbracket_top)
     lbracket_top = Label(button_frame_left, image=lbracket_top_image)
     lbracket_top.grid(column=1,row=4,rowspan=2,sticky=tk.E,padx=10)
 
-    link_margins_image = ImageTk.PhotoImage(file='images/link.png')
+    link_margins_image = ImageTk.PhotoImage(file=ip.icn_link)
     link_margins = Label(button_frame_left, image=link_margins_image, cursor='pointinghand')
     link_margins.grid(column=1,row=5,rowspan=2,sticky=tk.E,padx=10)
     link_margins.bind('<Button-1>', screen_splitter.link_margins)
 
-    lbracket_btm_image = ImageTk.PhotoImage(file='images/lbracket2.png')
+    lbracket_btm_image = ImageTk.PhotoImage(file=ip.icn_lbracket_bottom)
     lbracket_btm = Label(button_frame_left, image=lbracket_btm_image)
     lbracket_btm.grid(column=1,row=6,rowspan=2,sticky=tk.E,padx=10)
 
     
-
-
-
 
     # NOW THE CORRESPONDING ENTRIES ==============================================
     def mk_entries(root: tk.Frame, vars: dict[str, tk.IntVar]):
@@ -955,8 +955,6 @@ def main():
                 highlightthickness=1,
                 highlightbackground=cp.canvas_bg_color,
                 highlightcolor=cp.canvas_bg_color
-                # style='pad.TEntry'
-                # border=cp.root_bg_color
             )
             var_entries[key] = (label,entry)
         return var_entries
@@ -969,17 +967,17 @@ def main():
             if key == 'height' or key == 'gutter':
                 i += 1
             i += 1
+
+        # adds spacers
         tk.Label(button_frame_left,height=1,background=cp.root_bg_color).grid(column=2,row=3, pady=3)
         tk.Label(button_frame_left,height=1,background=cp.root_bg_color).grid(column=2,row=9, pady=3)
         tk.Label(button_frame_left,height=1,background=cp.root_bg_color).grid(column=2,row=12, pady=3)
-        ...
     
     
     entries: dict[str,tuple[tk.Label,tk.Entry]] = mk_entries(root, vars)
     grid_entries(entries)
 
     ScreenSplitter.entries = entries
-
 
     entries["width"][1].bind("<Return>", lambda a: screen_splitter.width_refresh(vars["width"].get))
     entries["width"][1].bind("<FocusOut>", lambda a: screen_splitter.width_refresh(vars["width"].get))
@@ -988,7 +986,6 @@ def main():
     entries["height"][1].bind("<Return>", lambda a: screen_splitter.height_refresh(vars["height"].get))
     entries["height"][1].bind("<FocusOut>", lambda a: screen_splitter.height_refresh(vars["height"].get))
     entries["height"][1].bind("<KP_Enter>", lambda a: screen_splitter.height_refresh(vars["height"].get))
-
 
 
     entries["top"][1].bind("<Return>", lambda a: screen_splitter.top_refresh(vars["top"].get))
@@ -1022,6 +1019,7 @@ def main():
     entries["rows"][1].bind("<KP_Enter>", lambda a: screen_splitter.row_refresh(vars["rows"].get))
 
 
+
     ##################################################################################
     ##################### BUTTON RIGHT FRAME #########################################
     ##################################################################################
@@ -1038,8 +1036,7 @@ def main():
 
 
     # Rotate Clockwise
-    rotate_cw_file = Image.open('images/icn_rotatecw.png')
-    rotate_cw_img = ImageTk.PhotoImage(rotate_cw_file)
+    rotate_cw_img = ImageTk.PhotoImage(file=ip.icn_rotate_cw)
     rotate_cw_icon = tk.Label(button_frame_right, image=rotate_cw_img, cursor='pointinghand')
     rotate_cw_text = tk.Label(button_frame_right, text="Rotate Clockwise", justify=tk.LEFT)
     # rotate_cw_icon.bind("<Button-1>", screen_splitter.rotate_cw)
@@ -1048,8 +1045,7 @@ def main():
     rotate_cw_text.grid(column=2,row=1,padx=10,sticky=tk.W)
 
     # Rotate Counterclockwise
-    rotate_ccw_file = Image.open('images/icn_rotateccw.png')
-    rotate_ccw_img = ImageTk.PhotoImage(rotate_ccw_file)
+    rotate_ccw_img = ImageTk.PhotoImage(file=ip.icn_rotate_ccw)
     rotate_ccw_icon = tk.Label(button_frame_right, image=rotate_ccw_img, cursor='pointinghand')
     rotate_ccw_text = tk.Label(button_frame_right, text="Rotate\nCounterclockwise", justify=tk.LEFT)
     # rotate_ccw_icon.bind("<Button-1>", screen_splitter.rotate_ccw)
@@ -1058,8 +1054,7 @@ def main():
     rotate_ccw_text.grid(column=2,row=2,padx=10,sticky=tk.W)
 
     # Flip Vertically
-    flipv_file = Image.open('images/icn_flipv.png')
-    flipv_img = ImageTk.PhotoImage(flipv_file)
+    flipv_img = ImageTk.PhotoImage(file=ip.icn_flip_v)
     flipv_icon = tk.Label(button_frame_right, image=flipv_img, justify=tk.RIGHT, cursor='pointinghand')
     flipv_text = tk.Label(button_frame_right, text="Flip Vertically", justify=tk.LEFT)
     flipv_icon.bind("<Button-1>",screen_splitter.flip_v)
@@ -1068,8 +1063,7 @@ def main():
     flipv_text.grid(column=2,row=3,padx=10,sticky=tk.W)
 
     # Flip Horizontally
-    fliph_file = Image.open('images/icn_fliph.png')
-    fliph_img = ImageTk.PhotoImage(fliph_file)
+    fliph_img = ImageTk.PhotoImage(file=ip.icn_flip_h)
     fliph_icon = tk.Label(button_frame_right, image=fliph_img, cursor='pointinghand')
     fliph_text = tk.Label(button_frame_right, text="Flip Horizontally", justify=tk.LEFT)
     fliph_icon.bind("<Button-1>",screen_splitter.flip_h)
@@ -1079,8 +1073,7 @@ def main():
 
 
     # Delete all screens
-    delete_file = Image.open('images/icn_delete.png')
-    delete_img = ImageTk.PhotoImage(delete_file)
+    delete_img = ImageTk.PhotoImage(file=ip.icn_delete_all)
 
     delete_icon = tk.Label(button_frame_right, image=delete_img, cursor='pointinghand')
     delete_text = tk.Label(button_frame_right, text="Delete all Screens", justify=tk.LEFT)
@@ -1089,7 +1082,7 @@ def main():
     delete_icon.grid(column=1,row=5,padx=10,pady=20)
     delete_text.grid(column=2,row=5,padx=10,sticky=tk.W)
 
-
+    # spacer
     Label(button_frame_right,height=1).grid(row=6,columnspan=2)
 
 
@@ -1099,8 +1092,7 @@ def main():
     
     # RENDER BUTTON FRAME WIDGETS ================================
     # the render button
-    render_bttn_img = Image.open('images/render_button.png')
-    render_bttn_img = ImageTk.PhotoImage(render_bttn_img)
+    render_bttn_img = ImageTk.PhotoImage(file=ip.btn_render)
 
     render_button = tk.Button(
         render_bttn_frame,
