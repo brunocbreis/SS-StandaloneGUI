@@ -735,23 +735,23 @@ class ColorPalette:
 
 class ImgPalette:
     # right column icons
-    icn_rotate_cw = ['images/icons/icn_rotatecw_state1.png', 'images/icons/icn_rotatecw_state2.png', 'images/icons/icn_rotatecw_state3.png']
-    icn_rotate_ccw = ['images/icons/icn_rotateccw_state1.png', 'images/icons/icn_rotateccw_state2.png', 'images/icons/icn_rotateccw_state3.png']
-    icn_flip_v = ['images/icons/icn_flipv_state1.png', 'images/icons/icn_flipv_state2.png', 'images/icons/icn_flipv_state3.png']
-    icn_flip_h = ['images/icons/icn_fliph_state1.png', 'images/icons/icn_fliph_state2.png', 'images/icons/icn_fliph_state3.png']
-    icn_delete_all = ['images/icons/icn_trash_state1.png', 'images/icons/icn_trash_state2.png','images/icons/icn_trash_state3.png']
+    icn_rotate_cw = ['icn_rotatecw_state1.png', 'icn_rotatecw_state2.png', 'icn_rotatecw_state3.png']
+    icn_rotate_ccw = ['icn_rotateccw_state1.png', 'icn_rotateccw_state2.png', 'icn_rotateccw_state3.png']
+    icn_flip_v = ['icn_flipv_state1.png', 'icn_flipv_state2.png', 'icn_flipv_state3.png']
+    icn_flip_h = ['icn_fliph_state1.png', 'icn_fliph_state2.png', 'icn_fliph_state3.png']
+    icn_delete_all = ['icn_trash_state1.png', 'icn_trash_state2.png','icn_trash_state3.png']
 
     # app logo
-    app_logo = 'images/ss_logo_spaced.png'
+    app_logo = 'ss_logo_spaced.png'
 
     # render button
-    btn_render = 'images/btn_render_flatter.png'
+    btn_render = 'btn_render_flatter.png'
 
     # link bracket
-    icn_lbracket_top = 'images/icons/lbracket1.png'
-    icn_lbracket_bottom = 'images/icons/lbracket2.png'
+    icn_lbracket_top = 'lbracket1.png'
+    icn_lbracket_bottom = 'lbracket2.png'
 
-    icn_link = ['images/icons/icn_link_state1.png', 'images/icons/icn_link_state2.png', 'images/icons/icn_link_state3.png']
+    icn_link = ['icn_link_state1.png', 'icn_link_state2.png', 'icn_link_state3.png']
 
 
 
@@ -770,7 +770,7 @@ def main():
 
 
     # LOADING SPLITSCREENER DEFAULTS =========================================
-    defaults_raw = load_defaults("defaults/defaults.json")
+    defaults_raw = load_defaults("defaults.json")
     defaults = {}
     for key in defaults_raw.keys():
         for key, value in defaults_raw[key].items():

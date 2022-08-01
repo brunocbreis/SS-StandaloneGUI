@@ -6,3 +6,6 @@ presets/
 ui design/
 test images/
 old files/
+build/
+dist/
+.eggs/
