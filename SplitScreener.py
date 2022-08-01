@@ -1211,10 +1211,6 @@ def main():
     # fu_studio_button.grid(column=1,row=2)
 
 
-
-
-
-
     # FOOTER FRAME WIDGET ================================================
     ScreenSplitter.status_text = tk.StringVar()
     ScreenSplitter.status_text.trace_add('write',lambda a,b,c: clear_status_bar(screen_splitter))
@@ -1223,8 +1219,6 @@ def main():
     status_bar.pack(pady=15)
     tk.Frame(footer,height=15).pack()
     
-
-
 
 
 
