@@ -385,20 +385,29 @@ class ScreenSplitter(tk.Canvas):
     def link_margins(self, event: tk.Event):
         lbr = {k: self.entries[k][1] for k in ('left', 'bottom', 'right')}
         for mg in lbr.values():
-            mg.configure(state='readonly')
+            mg.configure(state='disabled')
 
         # rebind
         event.widget.unbind('<Button-1>')
         event.widget.bind('<Button-1>', self.unlink_margins)
-    
+
+        self.all_mg_refresh(self.vars['top'].get)
+
+        # change labels
         self.entries['top'][0].configure(text='Margin')
+        self.entries['left'][0].configure(foreground=ColorPalette.text_darker_color)
+        self.entries['bottom'][0].configure(foreground=ColorPalette.text_darker_color)
+        self.entries['right'][0].configure(foreground=ColorPalette.text_darker_color)
+
+
         self.entries['top'][1].unbind('<Return>')
         self.entries['top'][1].unbind('<FocusOut>')
         self.entries['top'][1].unbind('<KP_Enter>')
         self.entries["top"][1].bind("<Return>", lambda a: self.all_mg_refresh(self.vars["top"].get))
         self.entries["top"][1].bind("<FocusOut>", lambda a: self.all_mg_refresh(self.vars["top"].get))
         self.entries["top"][1].bind("<KP_Enter>", lambda a: self.all_mg_refresh(self.vars["top"].get))
-        self.global_refresh()
+        # self.global_refresh()
+        self.update_all_vars()
         
 
 
@@ -412,14 +421,20 @@ class ScreenSplitter(tk.Canvas):
         event.widget.unbind('<Button-1>')
         event.widget.bind('<Button-1>', self.link_margins)
         
+        # change labels
         self.entries['top'][0].configure(text='Top')
+        self.entries['left'][0].configure(foreground=ColorPalette.text_color)
+        self.entries['bottom'][0].configure(foreground=ColorPalette.text_color)
+        self.entries['right'][0].configure(foreground=ColorPalette.text_color)
+
         self.entries['top'][1].unbind('<Return>')
         self.entries['top'][1].unbind('<FocusOut>')
         self.entries['top'][1].unbind('<KP_Enter>')
+
         self.entries["top"][1].bind("<Return>", lambda a: self.top_refresh(self.vars["top"].get))
         self.entries["top"][1].bind("<FocusOut>", lambda a: self.top_refresh(self.vars["top"].get))
         self.entries["top"][1].bind("<KP_Enter>", lambda a: self.top_refresh(self.vars["top"].get))
-        self.global_refresh()
+        # self.global_refresh()
 
 
     @classmethod
@@ -488,12 +503,18 @@ class ScreenSplitter(tk.Canvas):
 
     def all_mg_refresh(self, func: Callable):
         newset = func()
-        oldset = self.ss_grid.margin._top_px
-        if oldset == newset:
+
+        top = self.ss_grid.margin._top_px
+        left = self.ss_grid.margin._left_px
+        bottom = self.ss_grid.margin._bottom_px
+        right = self.ss_grid.margin._right_px
+
+        if top == left == bottom == right == newset:
             return
 
         self.ss_grid.margin.all = newset
         self.global_refresh()
+        self.update_all_vars()
 
 
     def top_refresh(self, func: Callable):
