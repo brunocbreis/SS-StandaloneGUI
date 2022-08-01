@@ -219,18 +219,23 @@ class Grid:
     def give_birth(self, function: Callable) -> None:
         self._children.append(function)
 
-    def rotate_clockwise(self) -> None:  # something's still not working
+    def _rotate_grid(self) -> None:
         self.canvas.resolution = self.canvas.height, self.canvas.width
         self.margin.tlbr = (
-            self.margin.right,
-            self.margin.top,
-            self.margin.left,
-            self.margin.bottom,
+            self.margin._right_px,
+            self.margin._top_px,
+            self.margin._left_px,
+            self.margin._bottom_px,
         )
         self.composition = self.rows, self.cols
+
+    def rotate_clockwise(self) -> None:  
+        self._rotate_grid()
         ...
 
     def rotate_counterclockwise(self) -> None:
+        self._rotate_grid()
+
         ...
 
     @property
@@ -369,6 +374,11 @@ class Screen:
             newrow = screen.grid.rows - row - screen.rowspan
             screen.row = newrow + 1
         return True
+
+    def rotate_clockwise(self) -> None: # behaves weird
+        self.colspan, self.rowspan = self.rowspan, self.colspan
+        self.row, self.col = self.col, self.row
+
 
     # =================================================
 
