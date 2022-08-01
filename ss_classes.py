@@ -1,5 +1,4 @@
 from __future__ import annotations
-from turtle import screensize
 from typing import Callable
 
 

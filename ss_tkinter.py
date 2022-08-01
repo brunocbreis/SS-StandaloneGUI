@@ -308,6 +308,8 @@ def flip_v(root: Canvas):
     ss.Screen.flip_vertically()
     refresh_grid(root)
 
+
+
 def rotate_cw(ss_canvas: ss.Canvas, tk_canvas: Canvas, grid: ss.Grid, scale_label: Label):
     grid.rotate_clockwise()
     update_canvas_dims(ss_canvas, tk_canvas, scale_label)
