@@ -7,7 +7,7 @@ import ss_classes as ss
 from fusion_tool_generator import load_defaults, render_fusion_output, save_preset_for_fusion
 from PIL import ImageTk
 import pyperclip
-import tkmacosx as tkm
+# import tkmacosx as tkm
 
 
 # FUNCTIONS ======================================================
@@ -1182,27 +1182,27 @@ def main():
         pady=10
         )
 
-    fu_studio_button = tkm.Radiobutton(
-        render_bttn_frame,
-        # background=cp.root_bg_color,
-        # activebackground=cp.root_bg_color,
-        # bordercolor=cp.text_darker_color,
-        # bd=1,
-        text="Fusion Studio",
-        fg=cp.canvas_bg_color,
-        # highlightthickness=0,
-        # focusthickness=0,
-        takefocus=0,
-        # borderless=False,
-        bg=cp.root_bg_color,
-        # borderless=1,
-        activebackground=cp.entry_bg_color,
-        activeforeground=cp.text_darker_color,
-        highlightbackground=cp.text_color,
-        # bordercolor=cp.text_color
-        indicatoron=False
+    # fu_studio_button = tkm.Radiobutton(
+    #     render_bttn_frame,
+    #     # background=cp.root_bg_color,
+    #     # activebackground=cp.root_bg_color,
+    #     # bordercolor=cp.text_darker_color,
+    #     # bd=1,
+    #     text="Fusion Studio",
+    #     fg=cp.canvas_bg_color,
+    #     # highlightthickness=0,
+    #     # focusthickness=0,
+    #     takefocus=0,
+    #     # borderless=False,
+    #     bg=cp.root_bg_color,
+    #     # borderless=1,
+    #     activebackground=cp.entry_bg_color,
+    #     activeforeground=cp.text_darker_color,
+    #     highlightbackground=cp.text_color,
+    #     # bordercolor=cp.text_color
+    #     indicatoron=False
 
-    )
+    # )
 
 
     # gridding...
