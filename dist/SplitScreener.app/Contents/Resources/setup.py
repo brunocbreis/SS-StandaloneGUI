@@ -1,1 +1,0 @@
-/Users/brunoreis/Documents/Programacao/Python/Split screener/setup.py

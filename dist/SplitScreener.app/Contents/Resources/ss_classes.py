@@ -1,1 +1,0 @@
-/Users/brunoreis/Documents/Programacao/Python/Split screener/ss_classes.py

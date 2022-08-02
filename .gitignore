@@ -11,7 +11,7 @@ dist/
 
 .vscode/
 .eggs/
-
+zz trash/
 dist/SplitScreener.app/Contents/Info.plist
 dist/SplitScreener.app/Contents/MacOS/SplitScreener
 dist/SplitScreener.app/Contents/Resources/__boot__.py
