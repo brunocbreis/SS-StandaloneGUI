@@ -197,8 +197,8 @@ class Margin:
 class Grid:
     """Grid object. Creates a layout of columns and rows and returns their dimensions in normalized values."""
 
-    _children: list[Callable] = []
-    _matrix: list[list[int]] = []
+    _children: list[Callable] = None
+    _matrix: list[list[int]] = None
 
     def __init__(
         self, canvas: Canvas, margin: Margin, layout: tuple[int, int] = (12, 6)
@@ -216,6 +216,8 @@ class Grid:
         return title + message
 
     def give_birth(self, function: Callable) -> None:
+        if Grid._children is None:
+            Grid._children = []
         self._children.append(function)
 
     def _rotate_grid(self) -> None:
@@ -287,12 +289,16 @@ class Grid:
             1 - mg.top - mg.bottom - (self.rows - 1) * self.gutter[1]
         ) / self.rows
 
+        if Grid._matrix is None:
+            Grid._matrix = []
         self._matrix.clear()
         for row in range(self.rows):
             x = row * self.cols + 1
             matrix_row = [col + x for col in range(self.cols)]
             self._matrix.append(matrix_row)
 
+        if self._children is None:
+            return
         for child in self._children:
             child()
 
@@ -513,7 +519,7 @@ class Screen:
     def get_values(self) -> dict[str, int]:
         return self.values
 
-# not working at all
+
 class GridCell(Screen):
     """Grid Cells are Screens of 1 col width x 1 row height that compose a grid."""
 
@@ -562,7 +568,7 @@ class GridCell(Screen):
             + margin.bottom
             + (self._row - 1) * (grid.row_height + grid.gutter[1])
         )
-        y = y
+        # y = 1-y
 
         self.width = grid.col_width
         self.height = grid.row_height

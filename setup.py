@@ -11,41 +11,42 @@ APP = ['SplitScreener.py']
 DATA_FILES = [
     'setup.py', 'ss_classes.py', 'fusion_tool_generator.py',
     # images
-    'images/SS_icon.png',
-    'images/.DS_Store',
-    'images/ss_logo_spaced.png',
-    'images/icons',
-    'images/render_button.png',
-    'images/btn_render.png',
-    'images/btn_render_flatter.png',
+    'SS_icon.png',
+    '.DS_Store',
+    'ss_logo_spaced.png',
+    'icons',
+    'render_button.png',
+    'btn_render.png',
+    'btn_render_flatter.png',
     # icons
-    'images/icons/icn_rotateccw_state1.png', 
-    'images/icons/icn_rotateccw_state3.png', 
-    'images/icons/icn_rotateccw_state2.png', 
-    'images/icons/icn_trash_state2.png',
-    'images/icons/.DS_Store', 
-    'images/icons/icn_trash_state3.png',
-    'images/icons/icn_trash_state1.png',
-    'images/icons/icn_fliph_state1.png', 
-    'images/icons/lbracket2.png',
-    'images/icons/icn_flipv_state1.png',
-    'images/icons/icn_fliph_state2.png',
-    'images/icons/icn_flipv_state3.png',
-    'images/icons/lbracket1.png', 
-    'images/icons/icn_flipv_state2.png',
-    'images/icons/icn_fliph_state3.png', 
-    'images/icons/icn_rotatecw_state1.png', 
-    'images/icons/icn_rotatecw_state2.png',
-    'images/icons/icn_rotatecw_state3.png', 
-    'images/icons/icn_link_state1.png', 
-    'images/icons/icn_link_state2.png', 
-    'images/icons/icn_link_state3.png',
+    'icn_rotateccw_state1.png', 
+    'icn_rotateccw_state3.png', 
+    'icn_rotateccw_state2.png', 
+    'icn_trash_state2.png',
+    '.DS_Store', 
+    'icn_trash_state3.png',
+    'icn_trash_state1.png',
+    'icn_fliph_state1.png', 
+    'lbracket2.png',
+    'icn_flipv_state1.png',
+    'icn_fliph_state2.png',
+    'icn_flipv_state3.png',
+    'lbracket1.png', 
+    'icn_flipv_state2.png',
+    'icn_fliph_state3.png', 
+    'icn_rotatecw_state1.png', 
+    'icn_rotatecw_state2.png',
+    'icn_rotatecw_state3.png', 
+    'icn_link_state1.png', 
+    'icn_link_state2.png', 
+    'icn_link_state3.png',
     # defaults
-    'defaults/defaults.json',
-    #fonts
-    'fonts/Archivo_SemiExpanded-Light.ttf'
+    'defaults.json',
+
 ]
-OPTIONS = {}
+OPTIONS = {
+    'iconfile': 'app_icon.icns'
+}
 
 setup(
     app=APP,

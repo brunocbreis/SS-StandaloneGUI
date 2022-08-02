@@ -724,9 +724,10 @@ def main():
 
     # FONT PALETTE ========================================================
     class FontPalette:
-        main = Font(family="Archivo SemiExpanded Light")
-        small = Font(family="Archivo SemiExpanded Light", size=12)
-
+        # main = Font(family="Archivo SemiExpanded Light")
+        # small = Font(family="Archivo SemiExpanded Light", size=12)
+        main = "TkDefaultFont"
+        small = "TkSmallCaptionFont 12"
 
 
     # LOADING SPLITSCREENER DEFAULTS =========================================
@@ -754,7 +755,7 @@ def main():
     fp = FontPalette()
     ip = ImgPalette()
 
-    root.iconbitmap(ip.app_icon)
+    # root.iconbitmap(ip.app_icon)
 
 
     # ROOT CONFIGS =========================================================
