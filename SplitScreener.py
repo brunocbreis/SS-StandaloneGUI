@@ -1,14 +1,11 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
-from re import S
 import tkinter as tk
 from tkinter.font import Font
-from typing import Callable
+from typing import Any, Callable
 import ss_classes as ss
 from fusion_tool_generator import load_defaults, render_fusion_output, save_preset_for_fusion
 from PIL import ImageTk
 import pyperclip
-# import tkmacosx as tkm
 
 
 # FUNCTIONS ======================================================
@@ -54,29 +51,10 @@ def set_hover_style(button: tk.Label, img_list: list[ImageTk.PhotoImage]):
 #####################           CLASSES       ####################################
 ##################################################################################
 
-
-# BLOCKS ========================================================
-class Block(ABC):
-    @abstractmethod
-    def draw(self) -> None:
-        pass
-
-    @abstractmethod
-    def undraw(self) -> None:
-        pass
-
-    @abstractmethod
-    def config(self, **opts) -> None:
-        pass
-
-    @abstractmethod
-    def bind(self, event: str, callable) -> None:
-        pass
-
-
-class ScreenBlock(Block):
-    screen_blocks = None
-    settings = None
+###################         BLOCKS            ##########################
+class ScreenBlock:
+    screen_blocks: list[ScreenBlock] = None
+    settings: dict[str,Any] = None
 
     def __init__(
         self, tk_canvas: ScreenSplitter, ss_screen: ss.Screen, **config
@@ -121,21 +99,8 @@ class ScreenBlock(Block):
         for block in cls.screen_blocks:
             block.draw()
 
-    @classmethod
-    def redraw_all():
-        pass
 
-    def undraw(self) -> None:
-        pass
-
-    def config(self, **opts) -> None:
-        pass
-
-    def bind(self, event: str, callable) -> None:
-        pass
-
-
-class GridBlock(Block):
+class GridBlock:
     grid_blocks: list[GridBlock] = None
     settings = {}
 
@@ -144,6 +109,7 @@ class GridBlock(Block):
         self.grid_cell = grid_cell
 
         if grid_cell.index == 1:
+            # GridBlock.settings = {}
             for key, value in config.items():
                 self.settings[key] = value
 
@@ -192,14 +158,6 @@ class GridBlock(Block):
             block.draw()
 
     @classmethod
-    def undraw_all(cls):
-        if len(cls.grid_blocks) > 0:
-            for block in cls.grid_blocks:
-                block.undraw()
-                return
-        print("No blocks have been drawn.")
-
-    @classmethod
     def create_all(cls, canvas: tk.Canvas, grid: ss.Grid, **config):
         if cls.grid_blocks is None:
             cls.grid_blocks = []
@@ -212,65 +170,34 @@ class GridBlock(Block):
         for cell in grid_block_screens:
             GridBlock(canvas, cell, **config)
 
-    @classmethod
-    def config_all(cls, **opts):
-        for key, value in opts:
-            cls.settings[key] = value
-        list = cls.grid_blocks
-        for block in list:
-            block.config(**opts)
-
-    @classmethod
-    def bind_all(cls, event: str, callable: Callable):
-        for block in cls.grid_blocks:
-            block.bind(event, callable)
-        ...
-
-    def get_property(self, *opts):
-        for opt in opts:
-            return self.canvas.itemcget(self.rect, opt)
-
-    @property
-    def tag(self):
-        return self.get_property("tag")
-
-    @tag.setter
-    def tag(self, tag: str):
-        self.config(tag=tag)
-
     def bind(self, event: str, callable) -> None:
         self.canvas.tag_bind(self.tag, sequence=event, func=callable)
 
 
-# SCREEN SPLITTER ========================================================
+###################         SCREEN SPLITTER         ####################
 class ScreenSplitter(tk.Canvas):
+    # Grid and Grid display
+    ss_grid: ss.Grid = None
+    grid_blocks: list[GridBlock] = None
+    
+    
+    # Color Palette
+    screen_color: str = None
+    screen_color_pre_delete: str = None
+    screen_color_hover: str = None
+
+
+    # User Inputs
+    vars: dict[str,tk.IntVar] = None
+    entries: dict[str,tk.Entry] = None
+
+
+    # CLICKING AND DRAGGING MECHANISM      ======================
     new_screen_coords: tuple[tuple[float, float], tuple[float, float]] = (
         (0.0, 0.0),
         (0.0, 0.0),
     )
     new_screen_indexes: tuple[int, int] = (0, 0)
-    user_screens: list[ss.Screen] = None
-    user_screen_blocks: list = None
-    ss_grid: ss.Grid = None
-    grid_blocks: list[GridBlock] = None
-    max_width = 750
-    max_height = 550
-    fusion_export: str = None
-    selected_screen = None
-    status_text = None
-    scale_var: tk.DoubleVar() = None
-    scale_text: tk.StringVar() = None
-
-    # colors
-    screen_color: str = None
-    screen_color_pre_delete: str = None
-    screen_color_hover: str = None
-
-    fusion_studio: tk.BooleanVar = None
-    vars: dict[str,tk.IntVar] = None
-    entries: dict[str,tk.Entry] = None
-
-    user_wants_to_delete = True
 
     @classmethod
     def on_click(cls, event: tk.Event) -> None:
@@ -308,6 +235,11 @@ class ScreenSplitter(tk.Canvas):
             return
         cls.new_screen_indexes = None
 
+
+    # SCREEN CREATION       =================================
+    user_screens: list[ss.Screen] = None
+    user_screen_blocks: list = None
+
     def create_screen(self) -> None:
         if ScreenSplitter.ss_grid is None:
             raise Exception("Please attach a grid first.")
@@ -343,6 +275,9 @@ class ScreenSplitter(tk.Canvas):
         self.tag_bind(id,"<Button-2> <ButtonRelease-2>",self.delete_screen)
 
 
+    # SCREEN DELETION       =================================
+    user_wants_to_delete = True
+
     def pre_delete_screen(self, event: tk.Event) -> None:
         id = self.find_closest(event.x, event.y)[0]
         self.itemconfig(id,fill=self.screen_color_pre_delete,outline=self.screen_color_pre_delete)
@@ -351,7 +286,6 @@ class ScreenSplitter(tk.Canvas):
         self.user_wants_to_delete = False
         self.itemconfig(id,fill=self.screen_color,outline=self.screen_color)
         
-
     def delete_screen(self, event: tk.Event):
         if not self.user_wants_to_delete:
             self.user_wants_to_delete = True
@@ -364,7 +298,24 @@ class ScreenSplitter(tk.Canvas):
         to_delete = [screen for screen in self.user_screens if screen.id == screen_rect_id]
         self.user_screens.remove(*to_delete)
         self.user_wants_to_delete = True
-        
+
+
+    # SCREEN BATCH DELETION =================================
+    def delete_all_screens(self, event):
+        if not self.delete_screen_rectangles():
+            return
+        self.user_screens.clear()
+
+    def pre_delete_all_screens(self, event):
+        if self.user_screens is None:
+            return
+        ids_to_delete = [screen.id for screen in self.user_screens]
+        for id in ids_to_delete:
+            self.itemconfig(id,fill=self.screen_color_pre_delete,outline=self.screen_color_pre_delete)    
+
+
+    # SCREEN SELECTION (not implemented)
+    selected_screen = None
 
     def select_screen(self, event: tk.Event):
         ...
@@ -375,34 +326,8 @@ class ScreenSplitter(tk.Canvas):
     def deselect_screen(self, event):
         ...
 
-    def global_set(self, **kwargs: dict[str, int]) -> None:
-        do_width, do_height = False, False
-        if "width" in kwargs:
-            self.ss_grid.canvas.width = kwargs["width"]
-            do_width = True
-        if "height" in kwargs:
-            self.ss_grid.canvas.height = kwargs["height"]
-            do_height = True
 
-        if "top" in kwargs:
-            self.ss_grid.margin.top = kwargs["top"]
-        if "left" in kwargs:
-            self.ss_grid.margin.left = kwargs["left"]
-        if "bottom" in kwargs:
-            self.ss_grid.margin.bottom = kwargs["bottom"]
-        if "right" in kwargs:
-            self.ss_grid.margin.right = kwargs["right"]
-        if "gutter" in kwargs:
-            self.ss_grid.margin.gutter = kwargs["gutter"]
-
-        if "cols" in kwargs:
-            self.ss_grid.cols = kwargs["cols"]
-        if "rows" in kwargs:
-            self.ss_grid.rows = kwargs["rows"]
-
-        self.global_refresh((do_width, do_height))
-
-
+    # LINK OR UNLINK MARGIN CONTROL     ======================
     def link_margins(self, event: tk.Event):
         lbr = {k: self.entries[k][1] for k in ('left', 'bottom', 'right')}
         for mg in lbr.values():
@@ -430,7 +355,6 @@ class ScreenSplitter(tk.Canvas):
         # self.global_refresh()
         self.update_all_vars()
         
-
     def unlink_margins(self, event):
         lbr = {k: self.entries[k][1] for k in ('left', 'bottom', 'right')}
         for mg in lbr.values():
@@ -453,7 +377,6 @@ class ScreenSplitter(tk.Canvas):
         self.entries["top"][1].bind("<Return>", lambda a: self.top_refresh(self.vars["top"].get))
         self.entries["top"][1].bind("<FocusOut>", lambda a: self.top_refresh(self.vars["top"].get))
         self.entries["top"][1].bind("<KP_Enter>", lambda a: self.top_refresh(self.vars["top"].get))
-        # self.global_refresh()
 
 
     @classmethod
@@ -470,7 +393,7 @@ class ScreenSplitter(tk.Canvas):
         cls.vars["cols"].set(cls.ss_grid.cols)
         cls.vars["rows"].set(cls.ss_grid.rows)
 
-
+    # TRANSFORMATION METHODS
     def flip_h(self, event):
         if not ss.Screen.flip_horizontally():
             return
@@ -489,25 +412,39 @@ class ScreenSplitter(tk.Canvas):
 
         self.global_refresh()
         self.update_all_vars()
+        ...
 
     def rotate_ccw(self, event):
         self.ss_grid.rotate_counterclockwise()
         self.global_refresh()
         self.update_all_vars()
+        ...
 
-    def delete_all_screens(self, event):
-        if not self.delete_screen_rectangles():
-            return
-        self.user_screens.clear()
 
-    def pre_delete_all_screens(self, event):
+    # REFRESHING METHODS        =================================
+    # GLOBAL
+    def global_refresh(
+        self, canvas_changed: tuple[bool, bool] = (False, False)
+    ) -> None:
+        if canvas_changed[0]:
+            self.configure(width=self.ss_grid.canvas.width)
+        if canvas_changed[1]:
+            self.configure(height=self.ss_grid.canvas.height)
+
+        self.update_dims()
+
+        
+        GridBlock.create_all(self, self.ss_grid)
+
+        self.delete("all")
+        GridBlock.draw_all()
         if self.user_screens is None:
             return
-        ids_to_delete = [screen.id for screen in self.user_screens]
-        for id in ids_to_delete:
-            self.itemconfig(id,fill=self.screen_color_pre_delete,outline=self.screen_color_pre_delete)
+        for screen in self.user_screens:
+            self.draw_screen(screen)
 
-    # REFRESHING METHODS
+
+    # canvas
     def width_refresh(self, func: Callable):
         newset = func()
         oldset = self.ss_grid.canvas.width
@@ -526,6 +463,7 @@ class ScreenSplitter(tk.Canvas):
         self.ss_grid.canvas.height = newset
         self.global_refresh((False, True))
 
+    # margin
     def all_mg_refresh(self, func: Callable):
         newset = func()
 
@@ -540,7 +478,6 @@ class ScreenSplitter(tk.Canvas):
         self.ss_grid.margin.all = newset
         self.global_refresh()
         self.update_all_vars()
-
 
     def top_refresh(self, func: Callable):
         newset = func()
@@ -587,6 +524,7 @@ class ScreenSplitter(tk.Canvas):
         self.ss_grid.margin.gutter = newset
         self.global_refresh()
 
+    # grid
     def col_refresh(self, func: Callable):
         newset = func()
         oldset = self.ss_grid.cols
@@ -605,26 +543,15 @@ class ScreenSplitter(tk.Canvas):
         self.ss_grid.rows = newset
         self.global_refresh()
 
-    def global_refresh(
-        self, canvas_changed: tuple[bool, bool] = (False, False)
-    ) -> None:
-        if canvas_changed[0]:
-            self.configure(width=self.ss_grid.canvas.width)
-        if canvas_changed[1]:
-            self.configure(height=self.ss_grid.canvas.height)
 
-        self.update_dims()
-
-        
-        GridBlock.create_all(self, self.ss_grid)
-
-        self.delete("all")
-        GridBlock.draw_all()
-        if self.user_screens is None:
+    # screens
+    def screens_only_refresh(self):
+        if not self.delete_screen_rectangles():
             return
+            
+        # redraw everything
         for screen in self.user_screens:
             self.draw_screen(screen)
-
 
     def delete_screen_rectangles(self) -> bool:
         if self.user_screens is None:
@@ -637,13 +564,13 @@ class ScreenSplitter(tk.Canvas):
 
         return True
 
-    def screens_only_refresh(self):
-        if not self.delete_screen_rectangles():
-            return
-            
-        # redraw everything
-        for screen in self.user_screens:
-            self.draw_screen(screen)
+    
+    # CANVAS DISPLAY METHODS ==========================================
+    max_width = 750
+    max_height = 550
+
+    scale_var: tk.DoubleVar() = None
+    scale_text: tk.StringVar() = None
 
     def compute_dims(self) -> tuple[int]:
         canvas = self.ss_grid.canvas
@@ -670,6 +597,12 @@ class ScreenSplitter(tk.Canvas):
         self.scale_var.set(value=self.preview_scale)
         self.scale_text.set(f"Preview scale: {self.scale_var.get()*100:.1f}%")
 
+
+    # IO METHODS            ==========================================
+    fusion_export: str = None # for saving
+    status_text = None # for announcing
+    fusion_studio: tk.BooleanVar = None
+
     @classmethod
     def export_for_fusion(cls, event: tk.Event) -> None:
         if cls.user_screens is None:
@@ -683,9 +616,20 @@ class ScreenSplitter(tk.Canvas):
             cls.status_text = tk.StringVar()
         cls.status_text.set("Node tree successfuly copied to clipboard.")
 
+    def save_splitscreener_preset():
+        ...
+    
+    def save_fusion_preset():
+        ...
+
+    def reset_defaults():
+        ...
+
+    def save_new_defaults():
+        ...
 
 
-# RECT TRACKER ========================================================
+###################         RECT TRACKER            ####################
 class RectTracker:
     def __init__(self, canvas: tk.Canvas):
         self.canvas = canvas
@@ -720,7 +664,7 @@ class RectTracker:
         self.item = None
 
 
-# COLOR PALETTE =========================================================
+###################         STYLE PALETTES          ####################
 class ColorPalette:
     root_bg_color = "#282828"
     canvas_bg_color = "#141414"
@@ -769,7 +713,9 @@ class Defaults:
         self.grid = defaults
 
 
-# APP =================================================================================
+##################################################################################
+#####################       SPLITSCREENER APP       ##############################
+##################################################################################
 def main():
 
     root = tk.Tk()
@@ -863,33 +809,18 @@ def main():
     # APP LOGO
     logo = ImageTk.PhotoImage(file=ip.app_logo)
 
-
     # APP TITLE
     app_title = tk.Label(header, height=100, justify=tk.CENTER, image=logo)
-    app_title.pack(anchor=tk.S, pady=20)
-
-
-
-    # GETTING SCREEN DIMS
-    pc_screen_width = root.winfo_screenwidth()
-    pc_screen_height = root.winfo_screenheight()
-    screen_center = (pc_screen_width/2,pc_screen_height/2)
-
-    root.update()
-    window_height = root.winfo_height()
-    # print(window_height)
-    
+    app_title.pack(anchor=tk.S, pady=20)    
 
 
     ##################################################################################
     #####################       SCREEN SPLITTER  #####################################
     ##################################################################################
-
     screen_splitter = ScreenSplitter(
         creator_frame, background=cp.canvas_bg_color, bd=0, highlightthickness=0, relief="ridge"
     )
     ScreenSplitter.ss_grid = ss_grid
-
     ScreenSplitter.scale_var = tk.DoubleVar()
     ScreenSplitter.scale_text = tk.StringVar()
     ScreenSplitter.screen_color: str = cp.canvas_screen_color
@@ -897,18 +828,10 @@ def main():
     ScreenSplitter.screen_color_hover = cp.canvas_screen_color_hover
     ScreenSplitter.fusion_studio: tk.BooleanVar = tk.BooleanVar()
 
-    # ScreenSplitter.max_width = int(round(pc_screen_width/4,0))
-    # ScreenSplitter.max_height = int(round(pc_screen_height/4,0))
-    # ^ at first, but maybe config a min size for root window and then
-    # set these to a variable to allow rescaling
     screen_splitter.update_dims()
     
 
-    instruction_label = tk.Label(creator_frame, text="Click and drag below to draw your first Screen.", font=fp.small)
-
-
- 
-
+    # instruction_label = tk.Label(creator_frame, text="Click and drag below to draw your first Screen.", font=fp.small)
 
 
    # BINDING FOR CLICK AND DRAG SCREEN ADD =======================
@@ -916,18 +839,21 @@ def main():
     screen_splitter.bind("<ButtonRelease-1>", screen_splitter.on_release)
 
 
-
-
     # SCALE LABEL ====================================================================
-    scale_label = tk.Label(creator_frame, font=fp.small,textvariable=screen_splitter.scale_text, justify=tk.RIGHT, bg=cp.root_bg_color, foreground=cp.text_darker_color)
+    scale_label = tk.Label(
+        creator_frame, 
+        font=fp.small,
+        textvariable=screen_splitter.scale_text, 
+        justify=tk.RIGHT, 
+        bg=cp.root_bg_color, 
+        foreground=cp.text_darker_color
+        )
     
-    
-    
+     
     # instruction_label.grid( row=1,  sticky=tk.W)
     screen_splitter.grid(   row=2,  ipadx=20, pady=5)
     scale_label.grid(       row=3,  sticky=tk.NE)
 
-    
     
     
     # RENDERING GRID BLOCKS ======================================================
@@ -943,14 +869,19 @@ def main():
     GridBlock.draw_all()
 
 
+
+    # SELECTION RECTANGLE ==============================================
+    rect = RectTracker(screen_splitter)
+    rect.autodraw(fill="", width=0.5, outline=cp.text_darker_color, dash=(4, 4))
+
+
+
     ##################################################################################
     ##################### BUTTON LEFT FRAME ##########################################
     ##################################################################################
-    
-    # Label(button_frame_left).grid(row=1)
 
     # TKINTER VARIABLES FOR USER GRID SETTINGS ========================================
-    vars = {}
+    vars: dict[str,tk.IntVar] = {}
 
 
     # CANVAS =======================
@@ -981,16 +912,19 @@ def main():
 
 
     # LINK MARGINS ======================================================================
+    # top bracket
     lbracket_top_image = ImageTk.PhotoImage(file=ip.icn_lbracket_top)
     lbracket_top = tk.Label(button_frame_left, image=lbracket_top_image)
     lbracket_top.grid(column=2,row=4,rowspan=2,sticky=tk.E,padx=11)
 
+    # link button
     link_margins_image = [ImageTk.PhotoImage(file=ip.icn_link[x]) for x in range(3)]
     link_margins = tk.Label(button_frame_left, image=link_margins_image[0])
     link_margins.grid(column=2,row=5,rowspan=2,sticky=tk.W,padx=9)
     set_hover_style(link_margins,link_margins_image)
     link_margins.bind('<Button-1>', screen_splitter.link_margins, add='+')
 
+    # bottom bracket
     lbracket_btm_image = ImageTk.PhotoImage(file=ip.icn_lbracket_bottom)
     lbracket_btm = tk.Label(button_frame_left, image=lbracket_btm_image)
     lbracket_btm.grid(column=2,row=6,rowspan=2,sticky=tk.E,padx=11)
@@ -998,18 +932,17 @@ def main():
     tk.Frame(button_frame_left,width=10).grid(column=1)
 
 
-
-    # NOW THE CORRESPONDING ENTRIES ==============================================
-    def mk_entries(root: tk.Frame, vars: dict[str, tk.IntVar]):
+    # ENTRIES FOR USER INPUT ==============================================
+    def mk_entries(parent: tk.Frame, vars: dict[str, tk.IntVar]):
         var_entries = {}
         for key, var in vars.items():
             new_key = key
             if key == 'cols' or key == 'rows':
                 new_key = f'# {key}'
-            label = tk.Label(button_frame_left, text=new_key.title(), bg=cp.root_bg_color, justify=tk.LEFT, padx=20)
+            label = tk.Label(parent, text=new_key.title(), bg=cp.root_bg_color, justify=tk.LEFT, padx=20)
 
             entry = tk.Entry(
-                button_frame_left,
+                parent,
                 width=8,
                 justify=tk.CENTER,
                 textvariable=var,
@@ -1040,7 +973,7 @@ def main():
         tk.Label(button_frame_left,height=1,background=cp.root_bg_color).grid(column=2,row=12, pady=3)
     
     
-    entries: dict[str,tuple[tk.Label,tk.Entry]] = mk_entries(root, vars)
+    entries: dict[str,tuple[tk.Label,tk.Entry]] = mk_entries(button_frame_left, vars)
     grid_entries(entries)
 
     ScreenSplitter.entries = entries
@@ -1077,7 +1010,6 @@ def main():
     entries["gutter"][1].bind("<KP_Enter>", lambda a: screen_splitter.gutter_refresh(vars["gutter"].get))
 
 
-
     entries["cols"][1].bind("<Return>", lambda a: screen_splitter.col_refresh(vars["cols"].get))
     entries["cols"][1].bind("<FocusOut>", lambda a: screen_splitter.col_refresh(vars["cols"].get))
     entries["cols"][1].bind("<KP_Enter>", lambda a: screen_splitter.col_refresh(vars["cols"].get))
@@ -1110,9 +1042,9 @@ def main():
     set_hover_style(rotate_cw_icon,rotate_cw_img)
 
     # rotate_cw_icon.bind("<Button-1>", screen_splitter.rotate_cw_img, add='+')
-    
     rotate_cw_icon.grid(column=1,row=1,padx=5,pady=20)
     rotate_cw_text.grid(column=2,row=1,padx=10,sticky=tk.W)
+
 
     # Rotate Counterclockwise
     rotate_ccw_img = [ImageTk.PhotoImage(file=ip.icn_rotate_ccw[x]) for x in range(3)]
@@ -1121,10 +1053,9 @@ def main():
     set_hover_style(rotate_ccw_icon, rotate_ccw_img)
 
     # rotate_ccw_icon.bind("<Button-1>", screen_splitter.rotate_ccw, add='+')
-
-    
     rotate_ccw_icon.grid(column=1,row=2,padx=5,pady=20)
     rotate_ccw_text.grid(column=2,row=2,padx=10,sticky=tk.W)
+
 
     # Flip Vertically
     flipv_img = [ImageTk.PhotoImage(file=ip.icn_flip_v[x]) for x in range(3)]
@@ -1137,6 +1068,7 @@ def main():
     
     flipv_icon.grid(column=1,row=3,padx=5,pady=20)
     flipv_text.grid(column=2,row=3,padx=10,sticky=tk.W)
+
 
     # Flip Horizontally
     fliph_img = [ImageTk.PhotoImage(file=ip.icn_flip_h[x]) for x in range(3)]
@@ -1164,6 +1096,7 @@ def main():
     delete_icon.grid(column=1,row=5,padx=5,pady=20)
     delete_text.grid(column=2,row=5,padx=10,sticky=tk.W)
 
+
     # spacer
     tk.Label(button_frame_right,height=1).grid(row=6,columnspan=2)
 
@@ -1171,9 +1104,7 @@ def main():
     ##################################################################################
     ##################### RENDER BUTTON AND FOOTER ###################################
     ##################################################################################
-    
-    # RENDER BUTTON FRAME WIDGETS ================================
-    # the render button
+
     render_bttn_img = ImageTk.PhotoImage(file=ip.btn_render)
 
     render_button = tk.Button(
@@ -1188,52 +1119,19 @@ def main():
         image=render_bttn_img,cursor="pointinghand",
     )
     render_button.bind('<Button-1>', screen_splitter.export_for_fusion)
-
-
-    # fusion studio checkbox
-    fu_studio_checkbox = tk.Checkbutton(
-        render_bttn_frame,
-        text="Fusion Studio (no MediaIns or Outs)", 
-        justify=tk.LEFT,
-        variable=screen_splitter.fusion_studio, 
-        # font="Archivo 10", 
-        pady=10
-        )
-
-    # fu_studio_button = tkm.Radiobutton(
-    #     render_bttn_frame,
-    #     # background=cp.root_bg_color,
-    #     # activebackground=cp.root_bg_color,
-    #     # bordercolor=cp.text_darker_color,
-    #     # bd=1,
-    #     text="Fusion Studio",
-    #     fg=cp.canvas_bg_color,
-    #     # highlightthickness=0,
-    #     # focusthickness=0,
-    #     takefocus=0,
-    #     # borderless=False,
-    #     bg=cp.root_bg_color,
-    #     # borderless=1,
-    #     activebackground=cp.entry_bg_color,
-    #     activeforeground=cp.text_darker_color,
-    #     highlightbackground=cp.text_color,
-    #     # bordercolor=cp.text_color
-    #     indicatoron=False
-
-    # )
-
-
-    # gridding...
     render_button.grid(     column=1, row=1, sticky=tk.N, pady=20)
-    # fu_studio_checkbox.grid(column=1, row=2, sticky=tk.N)
-    # fu_studio_button.grid(column=1,row=2)
 
 
 
-    # FOOTER FRAME WIDGET ================================================
+    # FOOTER FRAME ================================================
     ScreenSplitter.status_text = tk.StringVar()
     ScreenSplitter.status_text.trace_add('write',lambda a,b,c: clear_status_bar(screen_splitter))
-    status_bar = tk.Label(footer, textvariable=ScreenSplitter.status_text, justify=tk.CENTER, foreground=cp.text_darker_color)
+    status_bar = tk.Label(
+        footer, 
+        textvariable=ScreenSplitter.status_text, 
+        justify=tk.CENTER, 
+        foreground=cp.text_darker_color
+        )
 
     status_bar.pack(pady=15)
     tk.Frame(footer,height=15).pack()
@@ -1241,9 +1139,7 @@ def main():
 
 
 
-    # SELECTION RECTANGLE ==============================================
-    rect = RectTracker(screen_splitter)
-    rect.autodraw(fill="", width=0.5, outline=cp.text_darker_color, dash=(4, 4))
+    
 
     
     
