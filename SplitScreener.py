@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from re import S
 import tkinter as tk
 from tkinter.font import Font
 from typing import Callable
@@ -734,6 +735,9 @@ class ColorPalette:
 
 
 class ImgPalette:
+    # app icon
+    app_icon = "app_icon.icns"
+
     # right column icons
     icn_rotate_cw = ['icn_rotatecw_state1.png', 'icn_rotatecw_state2.png', 'icn_rotatecw_state3.png']
     icn_rotate_ccw = ['icn_rotateccw_state1.png', 'icn_rotateccw_state2.png', 'icn_rotateccw_state3.png']
@@ -754,12 +758,22 @@ class ImgPalette:
     icn_link = ['icn_link_state1.png', 'icn_link_state2.png', 'icn_link_state3.png']
 
 
+class Defaults:
+    
+    def __init__(self):
+        defaults_raw = load_defaults("defaults.json")
+        defaults = {}
+        for key in defaults_raw.keys():
+            for key, value in defaults_raw[key].items():
+                defaults[key] = value
+        self.grid = defaults
 
 
 # APP =================================================================================
 def main():
 
     root = tk.Tk()
+    
 
 
     # FONT PALETTE ========================================================
@@ -770,11 +784,8 @@ def main():
 
 
     # LOADING SPLITSCREENER DEFAULTS =========================================
-    defaults_raw = load_defaults("defaults.json")
-    defaults = {}
-    for key in defaults_raw.keys():
-        for key, value in defaults_raw[key].items():
-            defaults[key] = value
+    df = Defaults()
+    defaults = df.grid
 
     
     # SPLITSCREENER INITIALIZERS ======================================
@@ -797,6 +808,7 @@ def main():
     fp = FontPalette()
     ip = ImgPalette()
 
+    root.iconbitmap(ip.app_icon)
 
 
     # ROOT CONFIGS =========================================================
@@ -967,6 +979,8 @@ def main():
     ScreenSplitter.vars = vars
 
 
+
+    # LINK MARGINS ======================================================================
     lbracket_top_image = ImageTk.PhotoImage(file=ip.icn_lbracket_top)
     lbracket_top = tk.Label(button_frame_left, image=lbracket_top_image)
     lbracket_top.grid(column=2,row=4,rowspan=2,sticky=tk.E,padx=11)
@@ -982,6 +996,8 @@ def main():
     lbracket_btm.grid(column=2,row=6,rowspan=2,sticky=tk.E,padx=11)
 
     tk.Frame(button_frame_left,width=10).grid(column=1)
+
+
 
     # NOW THE CORRESPONDING ENTRIES ==============================================
     def mk_entries(root: tk.Frame, vars: dict[str, tk.IntVar]):
@@ -1029,6 +1045,8 @@ def main():
 
     ScreenSplitter.entries = entries
 
+
+    # BINDING ENTRIES TO REFRESH FUNCS ======================================================================
     entries["width"][1].bind("<Return>", lambda a: screen_splitter.width_refresh(vars["width"].get))
     entries["width"][1].bind("<FocusOut>", lambda a: screen_splitter.width_refresh(vars["width"].get))
     entries["width"][1].bind("<KP_Enter>", lambda a: screen_splitter.width_refresh(vars["width"].get))
@@ -1209,6 +1227,7 @@ def main():
     render_button.grid(     column=1, row=1, sticky=tk.N, pady=20)
     # fu_studio_checkbox.grid(column=1, row=2, sticky=tk.N)
     # fu_studio_button.grid(column=1,row=2)
+
 
 
     # FOOTER FRAME WIDGET ================================================
