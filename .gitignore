@@ -8,4 +8,6 @@ test images/
 old files/
 build/
 dist/
+dist/SplitScreener.app
+.vscode/
 .eggs/
