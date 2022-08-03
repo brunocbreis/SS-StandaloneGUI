@@ -237,9 +237,6 @@ class ScreenSplitter(tk.Canvas):
 
 
     # SCREEN CREATION       =================================
-    user_screens: list[ss.Screen] = None
-    user_screen_blocks: list = None
-
     def create_screen(self) -> None:
         if ScreenSplitter.ss_grid is None:
             raise Exception("Please attach a grid first.")
@@ -248,12 +245,7 @@ class ScreenSplitter(tk.Canvas):
         new_screen = ss.Screen.create_from_coords(
             ScreenSplitter.ss_grid, *ScreenSplitter.new_screen_indexes
         )
-
         self.draw_screen(new_screen)
-        if ScreenSplitter.user_screens is None:
-            ScreenSplitter.user_screens = []
-        
-        self.user_screens.append(new_screen)
 
     def draw_screen(self, screen: ss.Screen) -> None:
         new_screen_block = ScreenBlock(
@@ -261,8 +253,6 @@ class ScreenSplitter(tk.Canvas):
             screen,
             fill=self.screen_color,
             outline=self.screen_color,
-            # activefill=self.screen_color_hover,
-            # activeoutline=self.screen_color_hover,
             tag="screen",
         )
         new_screen_block.draw()
@@ -295,8 +285,8 @@ class ScreenSplitter(tk.Canvas):
         screen_rect_id = canvas.find_closest(event.x, event.y)[0]
         self.delete(screen_rect_id)
 
-        to_delete = [screen for screen in self.user_screens if screen.id == screen_rect_id]
-        self.user_screens.remove(*to_delete)
+        to_delete = [screen for screen in self.ss_grid.screens if screen.id == screen_rect_id]
+        self.ss_grid.screens.remove(*to_delete)
         self.user_wants_to_delete = True
 
 
@@ -304,12 +294,12 @@ class ScreenSplitter(tk.Canvas):
     def delete_all_screens(self, event):
         if not self.delete_screen_rectangles():
             return
-        self.user_screens.clear()
+        self.ss_grid.screens.clear()
 
     def pre_delete_all_screens(self, event):
-        if self.user_screens is None:
+        if self.ss_grid.screens is None:
             return
-        ids_to_delete = [screen.id for screen in self.user_screens]
+        ids_to_delete = [screen.id for screen in self.ss_grid.screens]
         for id in ids_to_delete:
             self.itemconfig(id,fill=self.screen_color_pre_delete,outline=self.screen_color_pre_delete)    
 
@@ -395,19 +385,19 @@ class ScreenSplitter(tk.Canvas):
 
     # TRANSFORMATION METHODS
     def flip_h(self, event):
-        if not ss.Screen.flip_horizontally():
+        if not self.ss_grid.flip_horizontally():
             return
         self.screens_only_refresh()
 
     def flip_v(self, event):
-        if not ss.Screen.flip_vertically():
+        if not self.ss_grid.flip_vertically():
             return
         self.screens_only_refresh()
         
     def rotate_cw(self, event):
         self.ss_grid.rotate_clockwise()
-        if self.user_screens is not None:
-            for screen in self.user_screens:
+        if self.ss_grid.screens is not None:
+            for screen in self.ss_grid.screens:
                 screen.rotate_clockwise()
 
         self.global_refresh()
@@ -438,9 +428,9 @@ class ScreenSplitter(tk.Canvas):
 
         self.delete("all")
         GridBlock.draw_all()
-        if self.user_screens is None:
+        if self.ss_grid.screens is None:
             return
-        for screen in self.user_screens:
+        for screen in self.ss_grid.screens:
             self.draw_screen(screen)
 
 
@@ -550,15 +540,15 @@ class ScreenSplitter(tk.Canvas):
             return
             
         # redraw everything
-        for screen in self.user_screens:
+        for screen in self.ss_grid.screens:
             self.draw_screen(screen)
 
     def delete_screen_rectangles(self) -> bool:
-        if self.user_screens is None:
+        if self.ss_grid.screens is None:
             return False
         
         # delete actual rectangles
-        ids_to_delete = [screen.id for screen in self.user_screens]
+        ids_to_delete = [screen.id for screen in self.ss_grid.screens]
         for id in ids_to_delete:
             self.delete(id)
 
@@ -605,10 +595,10 @@ class ScreenSplitter(tk.Canvas):
 
     @classmethod
     def export_for_fusion(cls, event: tk.Event) -> None:
-        if cls.user_screens is None:
+        if cls.ss_grid.screens is None:
             return
         screen_values = []
-        for screen in cls.user_screens:
+        for screen in cls.ss_grid.screens:
             screen_values.append(screen.get_values())
         cls.fusion_export = render_fusion_output(screen_values,cls.ss_grid.canvas.resolution,cls.fusion_studio.get())
         pyperclip.copy(cls.fusion_export)
