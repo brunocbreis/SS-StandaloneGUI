@@ -193,19 +193,19 @@ class Margin:
         for child in self._children:
             child()
 
-
 class Grid:
     """Grid object. Creates a layout of columns and rows and returns their dimensions in normalized values."""
 
-    _children: list[Callable] = None
-    _matrix: list[list[int]] = None
-
-    def __init__(
-        self, canvas: Canvas, margin: Margin, layout: tuple[int, int] = (12, 6)
-    ) -> None:
+    def __init__(self, canvas: Canvas, margin: Margin, layout: tuple[int, int] = (12, 6)) -> None:
         self.canvas = canvas
         self.margin = margin
         self._cols, self._rows = layout
+
+        self._children: list[Callable] = None
+        self._matrix: list[list[int]] = None
+
+        self._screens: list[Screen] = None
+        self._cells: list[GridCell] = None
 
         self.compute()
         self.margin.give_birth(self.compute)
@@ -215,11 +215,50 @@ class Grid:
         message = f"Cols: {self.cols}\tRows: {self.rows}\n"
         return title + message
 
+    # COMPUTER METHOD ========================================
+    def compute(self) -> None:
+        """Computes normalized values and calls children."""
+
+        mg = self.margin
+        self.col_width = (
+            1 - mg.left - mg.right - (self.cols - 1) * self.gutter[0]
+        ) / self.cols
+        self.row_height = (
+            1 - mg.top - mg.bottom - (self.rows - 1) * self.gutter[1]
+        ) / self.rows
+
+        if self._matrix is None:
+            self._matrix = []
+        self._matrix.clear()
+        for row in range(self.rows):
+            x = row * self.cols + 1
+            matrix_row = [col + x for col in range(self.cols)]
+            self._matrix.append(matrix_row)
+
+        if self._children is None:
+            return
+        for child in self._children:
+            child()
+
+
+    # OBSERVER METHODS ========================================
     def give_birth(self, function: Callable) -> None:
-        if Grid._children is None:
-            Grid._children = []
+        if self._children is None:
+            self._children = []
         self._children.append(function)
 
+    def append_screen(self, screen: Screen) -> None:
+        if self._screens is None:
+            self._screens = []
+        self._screens.append(screen)
+
+    def append_cell(self, cell: GridCell) -> None:
+        if self._cells is None:
+            self._cells = []
+        self._cells.append(cell)
+
+
+    # TRANSFORM METHODS ========================================
     def _rotate_grid(self) -> None:
         self.canvas.resolution = self.canvas.height, self.canvas.width
         self.margin.tlbr = (
@@ -239,6 +278,21 @@ class Grid:
 
         ...
 
+    def flip_horizontally(self) -> bool:
+        if self.screens is None:
+            return False
+        for screen in self.screens:
+            screen.flip_horizontally()
+        return True
+
+    def flip_vertically(self) -> bool:
+        if self.screens is None:
+            return False
+        for screen in self.screens:
+            screen.flip_vertically()
+        return True
+
+    # PROPERTIES AND SETTERS ========================================
     @property
     def cols(self) -> int:
         """Number of grid columns."""
@@ -278,40 +332,23 @@ class Grid:
         self._cols, self._rows = value
         self.compute()
 
-    def compute(self) -> None:
-        """Computes normalized values and calls children."""
-
-        mg = self.margin
-        self.col_width = (
-            1 - mg.left - mg.right - (self.cols - 1) * self.gutter[0]
-        ) / self.cols
-        self.row_height = (
-            1 - mg.top - mg.bottom - (self.rows - 1) * self.gutter[1]
-        ) / self.rows
-
-        if Grid._matrix is None:
-            Grid._matrix = []
-        self._matrix.clear()
-        for row in range(self.rows):
-            x = row * self.cols + 1
-            matrix_row = [col + x for col in range(self.cols)]
-            self._matrix.append(matrix_row)
-
-        if self._children is None:
-            return
-        for child in self._children:
-            child()
-
     @property
     def matrix(self) -> list:
         return self._matrix
 
 
+    # LISTS ==============================
+    @property
+    def screens(self) -> list[Screen]:
+        return self._screens
+
+    @property
+    def cells(self) -> list[GridCell]:
+        return self._cells
+
+
 class Screen:
     """Screen object class. Its dimensions and position are defined in columns and rows and returned in normalized values."""
-
-    list_of_screens: list[Screen] = None
-    count = 0
 
     def __init__(
         self, grid: Grid, colspan: int, rowspan: int, col: int, row: int
@@ -324,24 +361,18 @@ class Screen:
         self._col = col
         self._row = row
 
-        Screen.count += 1
-
-        self._name: str = f"SSScreen{Screen.count}"
-
         self.compute()
         self.grid.give_birth(self.compute)
-
-        if Screen.list_of_screens is None:
-            Screen.list_of_screens = []
-
-        self.list_of_screens.append(self)
+        self.grid.append_screen(self)
 
     def __str__(self) -> str:
-        message = f"Colw: {self.colspan}\tRoww: {self.rowspan}\nColx: {self.col}\tColy: {self.row}\n"
+        message = f"Colspan: {self.colspan}\tRowspan: {self.rowspan}\nCol: {self.col}\tRow: {self.row}\n"
         return message
 
     def delete(self) -> None:
-        Screen.list_of_screens.remove(self)
+        if self not in self.grid.screens:
+            return
+        self.grid.screens.remove(self)
 
     @classmethod
     def create_from_coords(cls: Screen, grid: Grid, point1: int, point2: int) -> Screen:
@@ -357,32 +388,24 @@ class Screen:
 
         return Screen(grid, colspan, rowspan, col, row)
 
-    # Screen transformations ==========================
-    @classmethod
-    def flip_horizontally(cls) -> bool:
-        """Flips current screen layout horizontally"""
-        if cls.list_of_screens is None:
-            return False
-        for screen in cls.list_of_screens:
-            col = screen.col - 1
-            newcol = screen.grid.cols - col - screen.colspan
-            screen.col = newcol + 1
-        return True
+    # TRANSFORMATION METHODS ==========================
+    # SHOULD FLIP ONLY SELF. ADD GRID METHOD FOR FLIPPING ALL
+    def flip_horizontally(self) -> None:
+        """Flips current screen horizontally"""
+        col = self.col - 1
+        newcol = self.grid.cols - col - self.colspan
+        self.col = newcol + 1
 
-    @classmethod
-    def flip_vertically(cls) -> bool:
-        """Flips current screen layout vertically"""
-        if cls.list_of_screens is None:
-            return False
-        for screen in cls.list_of_screens:
-            row = screen.row - 1
-            newrow = screen.grid.rows - row - screen.rowspan
-            screen.row = newrow + 1
-        return True
+    def flip_vertically(self) -> None:
+        """Flips current screen vertically"""
+        row = self.row - 1
+        newrow = self.grid.rows - row - self.rowspan
+        self.row = newrow + 1
 
     def rotate_clockwise(self) -> None: # behaves weird
         self.colspan, self.rowspan = self.rowspan, self.colspan
         self.row, self.col = self.col, self.row
+        ...
 
 
     # =================================================
@@ -541,6 +564,7 @@ class GridCell(Screen):
         
         self.compute()
         self.grid.give_birth(self.compute)
+        self.grid.append_cell(self)
 
     @classmethod
     def generate_all(cls, grid: Grid) -> list[GridCell]:
