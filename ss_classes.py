@@ -88,6 +88,8 @@ class Margin:
         self._gutter_px = gutter
         self._gutter_h = self._gutter_w = 0.0
 
+        self._gutterlimit: int = None
+
         self.compute()
         self.canvas.give_birth(self.compute)
 
@@ -99,6 +101,64 @@ class Margin:
     def give_birth(self, function: Callable) -> None:
         self._children.append(function)
 
+    # THE COMPUTER ========================================
+    def compute(self) -> None:
+        """Computes normalized values and calls children."""
+
+        cwidth, cheight = self.canvas.width, self.canvas.height
+
+        self._top = self._top_px / cheight
+        self._left = self._left_px / cwidth
+        self._bottom = self._bottom_px / cheight
+        self._right = self._right_px / cwidth
+
+        gutter = self._gutter_px
+
+        self._gutter_w = gutter / cwidth
+        self._gutter_h = gutter / cheight
+
+        self._widthlimit: int = cwidth
+        self._heightlimit: int = cheight
+
+        for child in self._children:
+            child()
+
+
+    # VALIDATION ========================================
+    def validate_top(self, value: int) -> bool:
+        mg_height = value + self._bottom_px
+        if mg_height >= self._heightlimit:
+            return False
+        return True
+
+    def validate_left(self, value: int) -> bool:
+        mg_width = value + self._right_px
+        if mg_width >= self._widthlimit:
+            return False
+        return True
+
+    def validate_bottom(self, value: int) -> bool:
+        mg_height = value + self._top_px
+        if mg_height >= self._heightlimit:
+            return False
+        return True
+
+    def validate_right(self, value: int) -> bool:
+        mg_width = value + self._left_px
+        if mg_width >= self._widthlimit:
+            return False
+        return True
+
+    @property
+    def gutterlimit(self) -> int:
+        return self._gutterlimit
+
+    @gutterlimit.setter
+    def gutterlimit(self, value: int) -> int:
+        self._gutterlimit = value
+        
+
+    # PROPERTIES  AND SETTERS ========================================
     @property
     def top(self) -> float:
         """Returns a normalized value. For pixel value, use _px"""
@@ -175,23 +235,7 @@ class Margin:
         self._gutter_px = value
         self.compute()
 
-    def compute(self) -> None:
-        """Computes normalized values and calls children."""
-
-        cwidth, cheight = self.canvas.width, self.canvas.height
-
-        self._top = self._top_px / cheight
-        self._left = self._left_px / cwidth
-        self._bottom = self._bottom_px / cheight
-        self._right = self._right_px / cwidth
-
-        gutter = self._gutter_px
-
-        self._gutter_w = gutter / cwidth
-        self._gutter_h = gutter / cheight
-
-        for child in self._children:
-            child()
+    
 
 class Grid:
     """Grid object. Creates a layout of columns and rows and returns their dimensions in normalized values."""
@@ -345,7 +389,6 @@ class Grid:
     @property
     def cells(self) -> list[GridCell]:
         return self._cells
-
 
 class Screen:
     """Screen object class. Its dimensions and position are defined in columns and rows and returned in normalized values."""
@@ -542,7 +585,6 @@ class Screen:
     def get_values(self) -> dict[str, int]:
         return self.values
 
-
 class GridCell(Screen):
     """Grid Cells are Screens of 1 col width x 1 row height that compose a grid."""
 
@@ -602,7 +644,7 @@ class GridCell(Screen):
 
 # Exceptions (not yet implemented)
 class MarginsExceedCanvas(Exception):
-    """Error for when margins are too big. Should be called when changin resolution or margins"""
+    """Error for when margins are too big. Should be called when changing resolution or margins"""
 
     ...
 
