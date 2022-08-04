@@ -1,12 +1,7 @@
 from __future__ import annotations
 import tkinter as tk
-from typing import Any, Callable
 import ss_classes as ss
-from fusion_tool_generator import (
-    load_defaults,
-    render_fusion_output,
-    save_preset_for_fusion,
-)
+from ss_export import load_defaults, render_fusion_output
 from PIL import ImageTk
 import pyperclip
 
@@ -62,7 +57,7 @@ def set_hover_style(button: tk.Label, img_list: list[ImageTk.PhotoImage]):
 ###################         BLOCKS            ##########################
 class ScreenBlock:
     screen_blocks: list[ScreenBlock] = None
-    settings: dict[str, Any] = None
+    settings: dict[str, int | str] = None
 
     def __init__(
         self, tk_canvas: ScreenSplitter, ss_screen: ss.Screen, **config
@@ -176,8 +171,8 @@ class GridBlock:
         for cell in grid_block_screens:
             GridBlock(canvas, cell, **config)
 
-    def bind(self, event: str, callable) -> None:
-        self.canvas.tag_bind(self.tag, sequence=event, func=callable)
+    def bind(self, event: str, function) -> None:
+        self.canvas.tag_bind(self.tag, sequence=event, func=function)
 
 
 ###################         SCREEN SPLITTER         ####################
@@ -448,7 +443,7 @@ class ScreenSplitter(tk.Canvas):
             self.draw_screen(screen)
 
     # canvas
-    def width_refresh(self, func: Callable):
+    def width_refresh(self, func: function):
         newset = func()
         oldset = self.ss_grid.canvas.width
         if oldset == newset:
@@ -457,7 +452,7 @@ class ScreenSplitter(tk.Canvas):
         self.ss_grid.canvas.width = newset
         self.global_refresh((True, False))
 
-    def height_refresh(self, func: Callable):
+    def height_refresh(self, func: function):
         newset = func()
         oldset = self.ss_grid.canvas.height
         if oldset == newset:
@@ -467,7 +462,7 @@ class ScreenSplitter(tk.Canvas):
         self.global_refresh((False, True))
 
     # margin
-    def all_mg_refresh(self, func: Callable):
+    def all_mg_refresh(self, func: function):
         newset = func()
 
         top = self.ss_grid.margin._top_px
@@ -482,7 +477,7 @@ class ScreenSplitter(tk.Canvas):
         self.global_refresh()
         self.update_all_vars()
 
-    def top_refresh(self, func: Callable):
+    def top_refresh(self, func: function):
         newset = func()
         oldset = self.ss_grid.margin._top_px
         if oldset == newset:
@@ -491,7 +486,7 @@ class ScreenSplitter(tk.Canvas):
         self.ss_grid.margin.top = newset
         self.global_refresh()
 
-    def left_refresh(self, func: Callable):
+    def left_refresh(self, func: function):
         newset = func()
         oldset = self.ss_grid.margin._left_px
         if oldset == newset:
@@ -500,7 +495,7 @@ class ScreenSplitter(tk.Canvas):
         self.ss_grid.margin.left = newset
         self.global_refresh()
 
-    def bottom_refresh(self, func: Callable):
+    def bottom_refresh(self, func: function):
         newset = func()
         oldset = self.ss_grid.margin._bottom_px
         if oldset == newset:
@@ -509,7 +504,7 @@ class ScreenSplitter(tk.Canvas):
         self.ss_grid.margin.bottom = newset
         self.global_refresh()
 
-    def right_refresh(self, func: Callable):
+    def right_refresh(self, func: function):
         newset = func()
         oldset = self.ss_grid.margin._right_px
         if oldset == newset:
@@ -518,7 +513,7 @@ class ScreenSplitter(tk.Canvas):
         self.ss_grid.margin.right = newset
         self.global_refresh()
 
-    def gutter_refresh(self, func: Callable):
+    def gutter_refresh(self, func: function):
         newset = func()
         oldset = self.ss_grid.margin._gutter_px
         if oldset == newset:
@@ -528,7 +523,7 @@ class ScreenSplitter(tk.Canvas):
         self.global_refresh()
 
     # grid
-    def col_refresh(self, func: Callable):
+    def col_refresh(self, func: function):
         newset = func()
         oldset = self.ss_grid.cols
         if oldset == newset:
@@ -537,7 +532,7 @@ class ScreenSplitter(tk.Canvas):
         self.ss_grid.cols = newset
         self.global_refresh()
 
-    def row_refresh(self, func: Callable):
+    def row_refresh(self, func: function):
         newset = func()
         oldset = self.ss_grid.rows
         if oldset == newset:
