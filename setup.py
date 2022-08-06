@@ -7,50 +7,49 @@ Usage:
 
 from setuptools import setup
 
-APP = ['SplitScreener.py']
+APP = ["SplitScreener.py"]
 DATA_FILES = [
-    'setup.py', 'ss_classes.py', 'fusion_tool_generator.py',
+    "setup.py",
+    "ss_classes.py",
+    "fusion_tool_generator.py",
     # images
-    'SS_icon.png',
-    '.DS_Store',
-    'ss_logo_spaced.png',
-    'icons',
-    'render_button.png',
-    'btn_render.png',
-    'btn_render_flatter.png',
+    "SS_icon.png",
+    ".DS_Store",
+    "ss_logo_spaced.png",
+    "icons",
+    "render_button.png",
+    "btn_render.png",
+    "btn_render_flatter.png",
     # icons
-    'icn_rotateccw_state1.png', 
-    'icn_rotateccw_state3.png', 
-    'icn_rotateccw_state2.png', 
-    'icn_trash_state2.png',
-    '.DS_Store', 
-    'icn_trash_state3.png',
-    'icn_trash_state1.png',
-    'icn_fliph_state1.png', 
-    'lbracket2.png',
-    'icn_flipv_state1.png',
-    'icn_fliph_state2.png',
-    'icn_flipv_state3.png',
-    'lbracket1.png', 
-    'icn_flipv_state2.png',
-    'icn_fliph_state3.png', 
-    'icn_rotatecw_state1.png', 
-    'icn_rotatecw_state2.png',
-    'icn_rotatecw_state3.png', 
-    'icn_link_state1.png', 
-    'icn_link_state2.png', 
-    'icn_link_state3.png',
+    "icn_rotateccw_state1.png",
+    "icn_rotateccw_state3.png",
+    "icn_rotateccw_state2.png",
+    "icn_trash_state2.png",
+    ".DS_Store",
+    "icn_trash_state3.png",
+    "icn_trash_state1.png",
+    "icn_fliph_state1.png",
+    "lbracket2.png",
+    "icn_flipv_state1.png",
+    "icn_fliph_state2.png",
+    "icn_flipv_state3.png",
+    "lbracket1.png",
+    "icn_flipv_state2.png",
+    "icn_fliph_state3.png",
+    "icn_rotatecw_state1.png",
+    "icn_rotatecw_state2.png",
+    "icn_rotatecw_state3.png",
+    "icn_link_state1.png",
+    "icn_link_state2.png",
+    "icn_link_state3.png",
     # defaults
-    'defaults.json',
-
+    "defaults.json",
 ]
-OPTIONS = {
-    'iconfile': 'app_icon.icns'
-}
+OPTIONS = {"iconfile": "app_icon.icns"}
 
 setup(
     app=APP,
     data_files=DATA_FILES,
-    options={'py2app': OPTIONS},
-    setup_requires=['py2app','jinja2','pyperclip','Pillow'],
+    options={"py2app": OPTIONS},
+    setup_requires=["py2app", "pysion", "pyperclip", "Pillow"],
 )

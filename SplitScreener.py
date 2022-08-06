@@ -731,7 +731,7 @@ class Defaults:
         for key in defaults_raw.keys():
             for key, value in defaults_raw[key].items():
                 defaults[key] = value
-        self.grid = defaults
+        self.values = defaults
 
 
 ##################################################################################
@@ -750,7 +750,7 @@ def main():
 
     # LOADING SPLITSCREENER DEFAULTS =========================================
     df = Defaults()
-    defaults = df.grid
+    defaults = df.values
 
     # SPLITSCREENER INITIALIZERS ======================================
     ss_canvas = ss.Canvas((defaults["width"], defaults["height"]))

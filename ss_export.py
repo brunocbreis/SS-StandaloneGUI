@@ -1,62 +1,16 @@
 import pickle
 import json
 import os
-
-
-def fusion_coords(coords: tuple[int, int]) -> tuple[int, int]:
-    """Converts x, y coords into Fusion flow scale"""
-    x, y = coords
-    return x * 110, y * 33
-
-
-def fusion_point(x: float, y: float) -> str:
-    return f"{{ {x}, {y} }}"
-
-
-def add_inputs(**inputs: dict[str, str | int]) -> str:
-    """Creates strings for adding inputs to Fusion tools"""
-
-    result = ""
-    for key, value in inputs.items():
-        result += f"\n\t\t\t\t{key} = Input {{ Value = {value}, }},"
-    return result
-
-
-def add_source_input(input: str, tool_name: str, tool_output: str) -> str:
-    """
-    Creates string for tools that get Inputs from other tools,
-    e.g from a Mask or a Spline
-    """
-
-    result = f'\n\t\t\t\t{input} = Input {{\n\t\t\t\t\tSourceOp = "{tool_name}",\n\t\t\t\t\tSource = "{tool_output}", }},'
-    return result
-
-
-def add_tool(
-    tool_id: str, tool_name: str, position: tuple[int, int] = (0, 0), inputs: str = ""
-) -> str:
-    """Creates a Fusion tool"""
-    x, y = fusion_coords(position)
-    tool = f"\t\t{tool_name} = {tool_id} {{\n\t\t\tInputs = {{\t\t\t\t{inputs}\n\t\t\t}},\n\t\t\tViewInfo = OperatorInfo {{ Pos = {{ {x}, {y} }} }},\n\t\t}},\n"  # The f-string way
-    return tool
-
-
-def wrap_for_fusion(tools: str, last_tool_name: str = "") -> str:
-    """Adds header and footer to a sequence of tools"""
-
-    header = "{\n\tTools = ordered() {\n"
-    footer = f'\t}},\n\tActiveTool = "{last_tool_name}"\n}}'
-
-    return header + tools + footer
+import pysion
 
 
 # Specifically SplitScreener Functions
 def create_canvas(resolution: tuple[int, int]) -> str:
-    return add_tool(
+    return pysion.add_tool(
         "Background",
         "SSCanvas",
+        pysion.add_inputs(Width=resolution[0], Height=resolution[1]),
         (0, -1),
-        add_inputs(Width=resolution[0], Height=resolution[1]),
     )
 
 
@@ -75,51 +29,51 @@ def create_screen(
     media_in = ""
     media_in_as_input_to_merge = ""
     if not fusion_studio:
-        media_in = add_tool(
+        media_in = pysion.add_tool(
             "MediaIn",
             f"SSScreen{index+1}",
+            pysion.add_inputs(Layer=f'"{index}"'),
             (-1, index),
-            add_inputs(Layer=f'"{index}"'),
         )
-        media_in_as_input_to_merge = add_source_input(
+        media_in_as_input_to_merge = pysion.add_source_input(
             "Foreground", f"SSScreen{index+1}", "Output"
         )
 
-    merge = add_tool(
+    merge = pysion.add_tool(
         "Merge",
         f"SSMerge{index+1}",
-        (0, index),
-        add_inputs(
+        pysion.add_inputs(
             Center=f"{{ {inputs['CenterX']}, {inputs['CenterY']} }}",
             Size=inputs["Size"],
         )
-        + add_source_input("Background", last_tool_name, "Output")
+        + pysion.add_source_input("Background", last_tool_name, "Output")
         + media_in_as_input_to_merge
-        + add_source_input("EffectMask", f"SSMask{index+1}", "Mask"),
+        + pysion.add_source_input("EffectMask", f"SSMask{index+1}", "Mask"),
+        (0, index),
     )
 
-    mask = add_tool(
+    mask = pysion.add_tool(
         "RectangleMask",
         f"SSMask{index+1}",
-        (1, index),
-        add_inputs(
+        pysion.add_inputs(
             Center=f"{{ {inputs['CenterX']}, {inputs['CenterY']} }}",
             Width=inputs["Width"],
             Height=inputs["Height"],
             MaskWidth=resolution[0],
             MaskHeight=resolution[1],
         ),
+        (1, index),
     )
 
     return merge + media_in + mask
 
 
 def create_media_out(position: tuple[int, int], last_tool_name: str) -> str:
-    return add_tool(
+    return pysion.add_tool(
         "MediaOut",
         "MediaOut1",
+        pysion.add_source_input("Input", last_tool_name, "Output"),
         position,
-        add_source_input("Input", last_tool_name, "Output"),
     )
 
 
@@ -154,7 +108,9 @@ def render_fusion_output(
     if not fusion_studio:
         fusion_media_out = create_media_out((0, len(screen_values)), last_tool_name)
 
-    fusion_output = wrap_for_fusion(fusion_canvas + fusion_screens + fusion_media_out)
+    fusion_output = pysion.wrap_for_fusion(
+        fusion_canvas + fusion_screens + fusion_media_out
+    )
 
     return fusion_output
 
@@ -223,27 +179,27 @@ def save_preset_for_splitscreener(
 
 # testing area
 def test():
-    bg = add_tool(
+    bg = pysion.add_tool(
         "Background",
         "Background1",
+        pysion.add_inputs(Width=1920, Height=1080, TopLeftRed=1),
         (0, 1),
-        add_inputs(Width=1920, Height=1080, TopLeftRed=1),
     )
-    bg2 = add_tool(
-        "Background", "Background2", (1, 0), add_inputs(Width=1920, Height=1080)
+    bg2 = pysion.add_tool(
+        "Background", "Background2", pysion.add_inputs(Width=1920, Height=1080), (1, 0)
     )
-    merge = add_tool(
+    merge = pysion.add_tool(
         "Merge",
         "Merge1",
-        (0, 0),
-        add_inputs(Size="1.5", Center="{.5,.5}")
-        + add_source_input("Background", "Background1", "Output")
+        pysion.add_inputs(Size="1.5", Center="{.5,.5}")
+        + pysion.add_source_input("Background", "Background1", "Output")
         + "\n"
-        + add_source_input("Foreground", "Background2", "Output"),
+        + pysion.add_source_input("Foreground", "Background2", "Output"),
+        (0, 0),
     )
 
     tools = bg + bg2 + merge
-    tools = wrap_for_fusion(tools)
+    tools = pysion.wrap_for_fusion(tools)
 
     print(tools)
 
