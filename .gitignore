@@ -8,6 +8,6 @@ test images/
 old files/
 build/
 dist/
-.vscode/
-.eggs/
+**/.vscode/
+**/.eggs/
 zz trash/
